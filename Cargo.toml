@@ -1,0 +1,8 @@
+[package]
+name = "lilac"
+version = "0.1.0"
+edition = "2021"
+description= "GUI framework"
+license= "MIT"
+
+[dependencies]
