@@ -2,7 +2,8 @@
 name = "lilac"
 version = "0.1.0"
 edition = "2021"
-description= "GUI framework"
-license= "MIT"
+description = "GUI framework"
+license = "MIT"
 
 [dependencies]
+sdl2 = "0.35"
