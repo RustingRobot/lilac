@@ -8,13 +8,13 @@ use sdl2::event::Event;
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
 
-pub struct Window{
+pub struct System{
     canvas: WindowCanvas,
     //video: VideoSubsystem,
     events: EventPump
 }
 
-impl Window {
+impl System {
     pub fn update(&self){
 
     }
@@ -26,18 +26,20 @@ impl Window {
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 
-    pub fn exit(&mut self) -> bool{
+    pub fn run(&mut self) -> bool{
+        self.update();
+        self.render();
         for event in self.events.poll_iter() {
             match event {
-                Event::Quit { .. } => return true,
+                Event::Quit { .. } => return false,
                 _ => {}
             }
         }
-        false
+        true
     }
 }
 
-pub fn init() -> Window{
+pub fn init() -> System{
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let win = video_subsystem.window("window", 400, 400)
@@ -49,7 +51,7 @@ pub fn init() -> Window{
     //window.set_bordered(false);
     let temp_canvas = win.into_canvas().build().unwrap();
     let event_pump = sdl_context.event_pump().unwrap();
-    Window{
+    System{
         canvas: temp_canvas,
         //video: video_subsystem,
         events: event_pump
