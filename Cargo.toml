@@ -2,10 +2,8 @@
 name = "lilac"
 version = "0.1.0"
 edition = "2021"
-description = "An immediate mode GUI framework."
+description = "Widget library and tweaks for the druid UI toolkit"
 license = "MIT"
 
-[dependencies.sdl2]
-version = "0.35"
-default-features = false
-features = ["image"]
+[dependencies]
+druid = "0.7.0"
