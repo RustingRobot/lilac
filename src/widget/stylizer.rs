@@ -3,14 +3,39 @@ use druid::WidgetPod;
 use tracing::instrument;
 
 pub struct Stylizer<T, W> {
-    paint_fn: Box<dyn FnMut(&mut PaintCtx, &T, &Env)>,
+    paint_fn: Option<Box<dyn FnMut(&mut PaintCtx, &T, &Env)>>,
+    layout_fn: Option<Box<dyn FnMut(&mut LayoutCtx, &BoxConstraints, &T, &Env) -> Size>>,
     child: WidgetPod<T, W>,
 }
 
 impl<T, W: Widget<T>> Stylizer<T, W> {
-    pub fn new(paint_fn: impl FnMut(&mut PaintCtx, &T, &Env) + 'static, child: W) -> Self {
+    pub fn new(
+        paint_fn: impl FnMut(&mut PaintCtx, &T, &Env) + 'static,
+        layout_fn: impl FnMut(&mut LayoutCtx, &BoxConstraints, &T, &Env) -> Size + 'static,
+        child: W,
+    ) -> Self {
         Stylizer {
-            paint_fn: Box::new(paint_fn),
+            paint_fn: Some(Box::new(paint_fn)),
+            layout_fn: Some(Box::new(layout_fn)),
+            child: WidgetPod::new(child),
+        }
+    }
+
+    pub fn new_paint(paint_fn: impl FnMut(&mut PaintCtx, &T, &Env) + 'static, child: W) -> Self {
+        Stylizer {
+            paint_fn: Some(Box::new(paint_fn)),
+            layout_fn: None,
+            child: WidgetPod::new(child),
+        }
+    }
+
+    pub fn new_layout(
+        layout_fn: impl FnMut(&mut LayoutCtx, &BoxConstraints, &T, &Env) -> Size + 'static,
+        child: W,
+    ) -> Self {
+        Stylizer {
+            paint_fn: None,
+            layout_fn: Some(Box::new(layout_fn)),
             child: WidgetPod::new(child),
         }
     }
@@ -34,11 +59,18 @@ impl<T: Data, W: Widget<T>> Widget<T> for Stylizer<T, W> {
 
     #[instrument(name = "Stylizer", level = "trace", skip(self, ctx, bc, data, env))]
     fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
-        self.child.layout(ctx, bc, data, env)
+        match self.layout_fn.as_mut() {
+            Some(f) => f(ctx, bc, data, env),
+            None => self.child.layout(ctx, bc, data, env),
+        }
     }
 
     #[instrument(name = "Stylizer", level = "trace", skip(self, ctx, data, env))]
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
-        (self.paint_fn)(ctx, data, env)
+        match self.paint_fn.as_mut() {
+            Some(f) => f(ctx, data, env),
+            None => self.child.paint(ctx, data, env),
+        }
+        //self.paint_fn.as_mut().unwrap()(ctx, data, env);
     }
 }
