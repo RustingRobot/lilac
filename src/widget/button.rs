@@ -23,6 +23,8 @@ use druid::widget::{prelude::*, Click, ControllerHost, Label, LabelText};
 use druid::EventCtx;
 use druid::{theme, AppLauncher, Insets, LocalizedString, Point, Rect, WindowDesc};
 
+use super::stylizer::Stylizer;
+
 const LABEL_INSETS: Insets = Insets::uniform_xy(8., 2.);
 pub struct Button<T> {
     label: Label<T>,
@@ -30,7 +32,7 @@ pub struct Button<T> {
 }
 
 impl<T: Data> Button<T> {
-    pub fn new(text: impl Into<LabelText<T>>) -> Button<T> {
+    pub fn new(text: impl Into<LabelText<T>>) -> Self {
         Button::from_label(Label::new(text))
     }
 
