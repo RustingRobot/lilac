@@ -769,6 +769,7 @@ name = "lilac"
 version = "0.1.0"
 dependencies = [
  "druid",
+ "piet-common",
  "tracing",
 ]
 

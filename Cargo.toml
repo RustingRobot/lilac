@@ -7,4 +7,5 @@ license = "MIT"
 
 [dependencies]
 druid = "0.7.0"
+piet-common = "0.3"
 tracing = "0.1.22" 
