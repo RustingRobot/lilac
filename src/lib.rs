@@ -1,2 +1,2 @@
 mod draw;
-pub mod widget;
+pub mod styles;

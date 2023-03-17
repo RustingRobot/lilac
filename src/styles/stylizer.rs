@@ -2,7 +2,7 @@ use super::prelude::*;
 
 //just the controller widget but for paint / layout
 
-pub trait Stylized<T, W: Widget<T>> {
+pub trait Stylizer<T, W: Widget<T>> {
     fn layout(
         &mut self,
         child: &mut W,
@@ -19,18 +19,18 @@ pub trait Stylized<T, W: Widget<T>> {
     }
 }
 
-pub struct Stylizer<W, S> {
+pub struct StylizerHost<W, S> {
     widget: W,
     stylizer: S,
 }
 
-impl<W, S> Stylizer<W, S> {
-    pub fn new(widget: W, stylizer: S) -> Stylizer<W, S> {
-        Stylizer { widget, stylizer }
+impl<W, S> StylizerHost<W, S> {
+    pub fn new(widget: W, stylizer: S) -> StylizerHost<W, S> {
+        StylizerHost { widget, stylizer }
     }
 }
 
-impl<T, W: Widget<T>, S: Stylized<T, W>> Widget<T> for Stylizer<W, S> {
+impl<T, W: Widget<T>, S: Stylizer<T, W>> Widget<T> for StylizerHost<W, S> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
         self.widget.event(ctx, event, data, env)
     }
