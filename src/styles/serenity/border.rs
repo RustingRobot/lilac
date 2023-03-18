@@ -26,34 +26,43 @@ impl<T: Data, W: Widget<T>> Stylizer<T, W> for Border {
     fn paint(&mut self, child: &mut W, ctx: &mut druid::PaintCtx, data: &T, env: &druid::Env) {
         let size = ctx.size();
 
-        //ctx.fill(size.to_rect(), &Color::GRAY);
+        let base_color = Color::rgba8(212, 208, 200, 255);
+        let highlight_color = Color::rgba8(255, 255, 255, 255);
+        let dark_color = Color::rgba8(128, 128, 128, 255);
+        let shadow_color = Color::rgba8(64, 64, 64, 255);
+
+        ctx.fill(size.to_rect(), &base_color);
         ctx.stroke(
-            Line::new(
-                (5.0, size.height - 5.0),
-                (size.width - 5.0, size.height - 5.0),
-            ),
-            &Color::RED,
+            Line::new((1.5, 1.5), (1.5, size.height - 1.5)),
+            &highlight_color,
             1.0,
         );
-
-        //ctx.stroke(size.to_rect(), &Color::WHITE, 1.0);
-
-        let border_width = env.get(theme::TEXTBOX_BORDER_WIDTH);
-
-        let clip_rect = size.to_rect().inset(-0.5);
-
-        ctx.stroke(clip_rect, &Color::RED, border_width);
-
-        ctx.stroke_styled(
-            Line::new((2.5, 2.5), (size.width - 2.5, 2.5)),
-            &Color::RED,
+        ctx.stroke(
+            Line::new((1.5, 1.5), (size.width - 1.5, 1.5)),
+            &highlight_color,
             1.0,
-            &StrokeStyle {
-                line_join: None,
-                line_cap: Some(LineCap::Square),
-                dash: None,
-                miter_limit: None,
-            },
         );
+        ctx.stroke(
+            Line::new((1.5, size.height - 1.5), (size.width, size.height - 1.5)),
+            &dark_color,
+            1.0,
+        );
+        ctx.stroke(
+            Line::new((size.width - 1.5, 1.5), (size.width - 1.5, size.height)),
+            &dark_color,
+            1.0,
+        );
+        ctx.stroke(
+            Line::new((0.0, size.height - 0.5), (size.width, size.height - 0.5)),
+            &shadow_color,
+            1.0,
+        );
+        ctx.stroke(
+            Line::new((size.width - 0.5, 0.0), (size.width - 0.5, size.height)),
+            &shadow_color,
+            1.0,
+        );
+        //let clip_rect = size.to_rect().inset(-0.5);
+        //ctx.stroke(clip_rect, &Color::RED, 1.0);
     }
 }
