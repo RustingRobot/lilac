@@ -26,7 +26,7 @@ struct AppState {
 
 pub fn main() {
     // describe the main window
-    let main_window = WindowDesc::new(build_root_widget)
+    let main_window = WindowDesc::new(build_root_widget())
         .title(WINDOW_TITLE)
         .window_size((400.0, 600.0));
 
