@@ -1,35 +1,55 @@
-use druid::{Color, Point};
-
-struct TitleBarTheme {
-    TitleTextColor: Color,
-    TitleTextShadow: Color,
-    TitleStripes: Color,
-    BarColor: [Color; 2],
-    TitlePos: Point,
-    BarHeight: f32,
-    ButtonSize: Point,
-    IconsOnly: bool,
+use druid::{theme::TEXT_COLOR, widget::EnvScope, Color, Data, Key, Point, Widget};
+use replace_with::replace_with_or_abort;
+pub struct TitleBarTheme {
+    pub TitleTextColor: Color,
+    pub TitleTextShadow: Color,
+    pub TitleStripes: Color,
+    pub BarColor: [Color; 2],
+    pub TitlePos: Point,
+    pub BarHeight: f32,
+    pub ButtonSize: Point,
+    pub IconsOnly: bool,
 }
 
-struct WindowTheme {
-    Text: Color,
-    PlaceholderText: Color,
-    Accent: Color,
-    Base: Color,
-    ThreedHighlight: Color,
-    ThreedShadow1: Color,
-    ThreedShadow2: Color,
-    HoverHighlight: Color,
+pub struct WindowTheme {
+    pub Text: Color,
+    pub PlaceholderText: Color,
+    pub Accent: Color,
+    pub Base: Color,
+    pub ThreedHighlight: Color,
+    pub ThreedShadow1: Color,
+    pub ThreedShadow2: Color,
+    pub HoverHighlight: Color,
 }
 
 pub struct serenityTheme {
-    tileBarTheme: TitleBarTheme,
-    InactiveWindow: TitleBarTheme,
-    ActiveWindow: WindowTheme,
-    DisabledWindow: WindowTheme,
+    pub tileBarTheme: TitleBarTheme,
+    pub InactiveWindow: TitleBarTheme,
+    pub ActiveWindow: WindowTheme,
+    pub DisabledWindow: WindowTheme,
 }
 
-const DAFAULT: serenityTheme = serenityTheme {
+pub fn default<T: Data, W: Widget<T>>(widget: W) -> EnvScope<T, W> {
+    EnvScope::new(
+        |env, _| {
+            env.set(TEXT_COLOR, Color::rgba8(0x00, 0x00, 0x00, 0xff));
+            replace_with_or_abort(env, |env_| {
+                env_.adding(BASE, Color::rgba8(0xd4, 0xd0, 0xc8, 0xff))
+                    .adding(THREED_HIGHLIGHT, Color::rgba8(0xff, 0xff, 0xff, 0xff))
+                    .adding(THREED_SHADOW1, Color::rgba8(0x80, 0x80, 0x80, 0xff))
+                    .adding(THREED_SHADOW2, Color::rgba8(0x40, 0x40, 0x40, 0xff))
+            });
+        },
+        widget,
+    )
+}
+
+pub const BASE: Key<Color> = Key::new("lilac.theme.base");
+pub const THREED_HIGHLIGHT: Key<Color> = Key::new("lilac.theme.threed_highlight");
+pub const THREED_SHADOW1: Key<Color> = Key::new("lilac.theme.threed_shadow1");
+pub const THREED_SHADOW2: Key<Color> = Key::new("lilac.theme.threed_shadow2");
+
+pub const DEFAULT: serenityTheme = serenityTheme {
     tileBarTheme: TitleBarTheme {
         TitleTextColor: Color::rgba8(0xff, 0xff, 0xff, 0xff),
         TitleTextShadow: Color::rgba8(0x42, 0x14, 0x05, 0xff),

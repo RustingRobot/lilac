@@ -1,3 +1,4 @@
 pub mod button;
+pub mod theme;
 
-mod theme;
+pub use button::Button;

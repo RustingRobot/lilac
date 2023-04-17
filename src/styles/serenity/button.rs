@@ -1,8 +1,9 @@
 use crate::draw::*;
 use crate::styles::prelude::*;
-use crate::styles::stylizer::{Stylizer, StylizerHost};
-use druid::widget::{self, Click, ControllerHost, Label, LabelText};
+use druid::widget::{Click, ControllerHost, Label, LabelText};
 use druid::{Affine, Color, Insets};
+
+use super::theme;
 
 const LABEL_INSETS: Insets = Insets::uniform_xy(8., 2.);
 
@@ -88,10 +89,10 @@ impl<T: Data> Widget<T> for Button<T> {
         let is_hot = ctx.is_hot();
         let size = ctx.size();
 
-        let base_color = Color::rgba8(212, 208, 200, 255);
-        let highlight_color = Color::rgba8(255, 255, 255, 255);
-        let dark_color = Color::rgba8(128, 128, 128, 255);
-        let shadow_color = Color::rgba8(64, 64, 64, 255);
+        let base_color = env.get(theme::BASE); //themes::DEFAULT.ActiveWindow.Base;
+        let highlight_color = env.get(theme::THREED_HIGHLIGHT);
+        let dark_color = env.get(theme::THREED_SHADOW1);
+        let shadow_color = env.get(theme::THREED_SHADOW2);
 
         ctx.fill(size.to_rect(), &base_color);
         pixel_line(ctx, (1.0, 1.0), (1.0, size.height - 1.0), highlight_color);

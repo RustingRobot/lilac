@@ -758,6 +758,7 @@ version = "0.1.0"
 dependencies = [
  "druid",
  "piet-common 0.3.2",
+ "replace_with",
  "tracing",
 ]
 
@@ -1122,6 +1123,12 @@ checksum = "4424af4bf778aae2051a77b60283332f386554255d722233d09fbfc7e30da2fc"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "replace_with"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3a8614ee435691de62bcffcf4a66d91b3594bf1428a5722e79103249a095690"
 
 [[package]]
 name = "rustc-hash"
