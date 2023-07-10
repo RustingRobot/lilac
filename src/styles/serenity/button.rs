@@ -1,7 +1,7 @@
 use crate::draw::*;
 use crate::styles::prelude::*;
 use druid::widget::{Click, ControllerHost, Label, LabelText};
-use druid::{Affine, Color, Insets};
+use druid::{Affine, Insets, Vec2};
 
 use super::theme;
 
@@ -86,47 +86,49 @@ impl<T: Data> Widget<T> for Button<T> {
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
         let is_active = ctx.is_active() && !ctx.is_disabled();
-        let is_hot = ctx.is_hot();
+        //let is_hot = ctx.is_hot();
         let size = ctx.size();
 
-        let base_color = env.get(theme::BASE); //themes::DEFAULT.ActiveWindow.Base;
+        let base_color = env.get(theme::BASE);
         let highlight_color = env.get(theme::THREED_HIGHLIGHT);
-        let dark_color = env.get(theme::THREED_SHADOW1);
-        let shadow_color = env.get(theme::THREED_SHADOW2);
+        let dark_color = env.get(theme::THREED_SHADOW_1);
+        let shadow_color = env.get(theme::THREED_SHADOW_2);
 
-        ctx.fill(size.to_rect(), &base_color);
-        pixel_line(ctx, (1.0, 1.0), (1.0, size.height - 1.0), highlight_color);
-        pixel_line(ctx, (1.0, 1.0), (size.width - 1.0, 1.0), highlight_color);
-        pixel_line(
-            ctx,
-            (1.0, size.height - 1.0),
-            (size.width, size.height - 1.0),
-            dark_color,
-        );
-        pixel_line(
-            ctx,
-            (size.width - 1.0, 1.0),
-            (size.width - 1.0, size.height),
-            dark_color,
-        );
-        pixel_line(
-            ctx,
-            (0.0, size.height),
-            (size.width, size.height),
-            shadow_color,
-        );
-        pixel_line(
-            ctx,
-            (size.width, 0.0),
-            (size.width, size.height),
-            shadow_color,
-        );
-
-        if ctx.is_hot() {
-            ctx.stroke(size.to_rect().inset(-0.5), &Color::WHITE, 1.0);
+        let positions;
+        if is_active {
+            positions = [
+                (1.0, size.height - 2.0),
+                (size.width - 2.0, 1.0),
+                (size.width - 2.0, size.height - 2.0),
+                (1.0, 1.0),
+                (0.0, size.height - 1.0),
+                (size.width - 1.0, 0.0),
+                (0.0, 0.0),
+            ];
+        } else {
+            positions = [
+                (1.0, size.height - 2.0),
+                (size.width - 2.0, 1.0),
+                (1.0, 1.0),
+                (size.width - 2.0, size.height - 2.0),
+                (0.0, size.height - 1.0),
+                (size.width - 1.0, 0.0),
+                (size.width - 1.0, size.height - 1.0),
+            ];
         }
 
-        let label_offset = (size.to_vec2() - self.label_size.to_vec2()) / 2.0;
+        ctx.fill(size.to_rect(), &base_color);
+        pixel_line(ctx, positions[0], positions[2], highlight_color);
+        pixel_line(ctx, positions[1], positions[2], highlight_color);
+        pixel_line(ctx, positions[0], positions[3], dark_color);
+        pixel_line(ctx, positions[1], positions[3], dark_color);
+        pixel_line(ctx, positions[4], positions[6], shadow_color);
+        pixel_line(ctx, positions[5], positions[6], shadow_color);
+
+        let mut label_offset = (size.to_vec2() - self.label_size.to_vec2()) / 2.0;
+        if is_active {
+            label_offset += Vec2::new(1.0, 1.0);
+        }
 
         ctx.with_save(|ctx| {
             ctx.transform(Affine::translate(label_offset));

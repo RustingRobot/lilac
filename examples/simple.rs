@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use druid::widget::{Flex, TextBox};
 use druid::{AppLauncher, Data, Lens, PlatformError, Widget, WidgetExt, WindowDesc};
+use lilac::styles::serenity::theme::*;
 use lilac::styles::serenity::*;
 
 #[derive(Clone, Data, Lens)]
@@ -13,19 +14,17 @@ struct AppState {
 }
 
 fn main() -> Result<(), PlatformError> {
-    let main_window = WindowDesc::new(theme::default(ui_builder()));
+    let main_window = WindowDesc::new(ui_builder());
 
     let initial_state = AppState {
         single: "".to_string().into(),
         data: 0,
     };
 
-    AppLauncher::with_window(main_window)
+    serenity_theme(Themes::Default, AppLauncher::with_window(main_window))
         .log_to_console()
         .launch(initial_state)
 }
-
-//themes::default
 
 fn ui_builder() -> impl Widget<AppState> {
     let button = Button::new("increment");

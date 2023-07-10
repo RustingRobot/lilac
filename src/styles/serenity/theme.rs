@@ -1,99 +1,61 @@
-use druid::{theme::TEXT_COLOR, widget::EnvScope, Color, Data, Key, Point, Widget};
+use druid::{theme::TEXT_COLOR, AppLauncher, Color, Data, Key, Point};
 use replace_with::replace_with_or_abort;
-pub struct TitleBarTheme {
-    pub TitleTextColor: Color,
-    pub TitleTextShadow: Color,
-    pub TitleStripes: Color,
-    pub BarColor: [Color; 2],
-    pub TitlePos: Point,
-    pub BarHeight: f32,
-    pub ButtonSize: Point,
-    pub IconsOnly: bool,
+
+pub enum Themes {
+    Default,
 }
 
-pub struct WindowTheme {
-    pub Text: Color,
-    pub PlaceholderText: Color,
-    pub Accent: Color,
-    pub Base: Color,
-    pub ThreedHighlight: Color,
-    pub ThreedShadow1: Color,
-    pub ThreedShadow2: Color,
-    pub HoverHighlight: Color,
+pub fn serenity_theme<T: Data>(theme: Themes, app: AppLauncher<T>) -> AppLauncher<T> {
+    match theme {
+        Themes::Default => default(app),
+    }
 }
 
-pub struct serenityTheme {
-    pub tileBarTheme: TitleBarTheme,
-    pub InactiveWindow: TitleBarTheme,
-    pub ActiveWindow: WindowTheme,
-    pub DisabledWindow: WindowTheme,
+fn default<T: Data>(app: AppLauncher<T>) -> AppLauncher<T> {
+    app.configure_env(|env, _| {
+        env.set(TEXT_COLOR, Color::rgba8(0x00, 0x00, 0x00, 0xff));
+        env.set(
+            druid::theme::WINDOW_BACKGROUND_COLOR,
+            Color::rgb8(0xd4, 0xd0, 0xc8),
+        );
+        replace_with_or_abort(env, |env_| {
+            env_.adding(BASE, Color::rgba8(0xd4, 0xd0, 0xc8, 0xff))
+                .adding(THREED_HIGHLIGHT, Color::rgba8(0xff, 0xff, 0xff, 0xff))
+                .adding(THREED_SHADOW_1, Color::rgba8(0x80, 0x80, 0x80, 0xff))
+                .adding(THREED_SHADOW_2, Color::rgba8(0x40, 0x40, 0x40, 0xff))
+        });
+    })
 }
+pub const TITLE_TEXT_COLOR: Key<Color> = Key::new("lilac.theme.title_text_color");
+pub const TITLE_TEXT_SHADOW: Key<Color> = Key::new("lilac.theme.title_text_shadow");
+pub const TITLE_STRIPES: Key<Color> = Key::new("lilac.theme.title_stripes");
+pub const BAR_COLOR: Key<(Color, Color)> = Key::new("lilac.theme.bar_color");
+pub const TITLE_POS: Key<Point> = Key::new("lilac.theme.title_pos");
+pub const BAR_HEIGHT: Key<f32> = Key::new("lilac.theme.bar_height");
+pub const BUTTON_SIZE: Key<Point> = Key::new("lilac.theme.button_size");
+pub const ICONS_ONLY: Key<bool> = Key::new("lilac.theme.icons_only");
 
-pub fn default<T: Data, W: Widget<T>>(widget: W) -> EnvScope<T, W> {
-    EnvScope::new(
-        |env, _| {
-            env.set(TEXT_COLOR, Color::rgba8(0x00, 0x00, 0x00, 0xff));
-            replace_with_or_abort(env, |env_| {
-                env_.adding(BASE, Color::rgba8(0xd4, 0xd0, 0xc8, 0xff))
-                    .adding(THREED_HIGHLIGHT, Color::rgba8(0xff, 0xff, 0xff, 0xff))
-                    .adding(THREED_SHADOW1, Color::rgba8(0x80, 0x80, 0x80, 0xff))
-                    .adding(THREED_SHADOW2, Color::rgba8(0x40, 0x40, 0x40, 0xff))
-            });
-        },
-        widget,
-    )
-}
-
+pub const TEXT: Key<Color> = Key::new("lilac.theme.text");
+pub const PLACEHOLDER_TEXT: Key<Color> = Key::new("lilac.theme.placeholder_text");
+pub const ACCENT: Key<Color> = Key::new("lilac.theme.accent");
 pub const BASE: Key<Color> = Key::new("lilac.theme.base");
 pub const THREED_HIGHLIGHT: Key<Color> = Key::new("lilac.theme.threed_highlight");
-pub const THREED_SHADOW1: Key<Color> = Key::new("lilac.theme.threed_shadow1");
-pub const THREED_SHADOW2: Key<Color> = Key::new("lilac.theme.threed_shadow2");
+pub const THREED_SHADOW_1: Key<Color> = Key::new("lilac.theme.threed_shadow_1");
+pub const THREED_SHADOW_2: Key<Color> = Key::new("lilac.theme.threed_shadow_2");
+pub const HOVER_HIGHLIGHT: Key<Color> = Key::new("lilac.theme.hover_highlight");
 
-pub const DEFAULT: serenityTheme = serenityTheme {
-    tileBarTheme: TitleBarTheme {
-        TitleTextColor: Color::rgba8(0xff, 0xff, 0xff, 0xff),
-        TitleTextShadow: Color::rgba8(0x42, 0x14, 0x05, 0xff),
-        TitleStripes: Color::rgba8(0x6e, 0x22, 0x09, 0xff),
-        BarColor: [
-            Color::rgba8(0x6e, 0x22, 0x09, 0xff),
-            Color::rgba8(0xf4, 0xca, 0x9e, 0xff),
-        ],
-        TitlePos: Point { x: 10.0, y: 10.0 },
-        BarHeight: 20.0,
-        ButtonSize: Point { x: 5.0, y: 5.0 },
-        IconsOnly: false,
-    },
-    ActiveWindow: WindowTheme {
-        Text: Color::rgba8(0x00, 0x00, 0x00, 0xff),
-        PlaceholderText: Color::rgba8(0x80, 0x80, 0x80, 0xff),
-        Accent: Color::rgba8(0xab, 0x6e, 0x4a, 0xff),
-        Base: Color::rgba8(0xd4, 0xd0, 0xc8, 0xff),
-        ThreedHighlight: Color::rgba8(0xff, 0xff, 0xff, 0xff),
-        ThreedShadow1: Color::rgba8(0x80, 0x80, 0x80, 0xff),
-        ThreedShadow2: Color::rgba8(0x40, 0x40, 0x40, 0xff),
-        HoverHighlight: Color::rgba8(0xe3, 0xdf, 0xdb, 0xff),
-    },
-    InactiveWindow: TitleBarTheme {
-        TitleTextColor: Color::rgba8(0xd5, 0xd0, 0xc7, 0xff),
-        TitleTextShadow: Color::rgba8(0x4c, 0x4c, 0x4c, 0xff),
-        TitleStripes: Color::rgba8(0x80, 0x80, 0x80, 0xff),
-        BarColor: [
-            Color::rgba8(0x80, 0x80, 0x80, 0xff),
-            Color::rgba8(0xc0, 0xc0, 0xc0, 0xff),
-        ],
-        TitlePos: Point { x: 10.0, y: 10.0 },
-        BarHeight: 20.0,
-        ButtonSize: Point { x: 5.0, y: 5.0 },
-        IconsOnly: false,
-    },
-    DisabledWindow: WindowTheme {
-        Text: Color::rgba8(0x00, 0x00, 0x00, 0xff),
-        PlaceholderText: Color::rgba8(0x80, 0x80, 0x80, 0xff),
-        Accent: Color::rgba8(0xab, 0x6e, 0x4a, 0xff),
-        Base: Color::rgba8(0xa4, 0xa0, 0x98, 0xff),
-        ThreedHighlight: Color::rgba8(0xdf, 0xdf, 0xdf, 0xff),
-        ThreedShadow1: Color::rgba8(0x50, 0x50, 0x50, 0xff),
-        ThreedShadow2: Color::rgba8(0x10, 0x10, 0x10, 0xff),
-        HoverHighlight: Color::rgba8(0xa4, 0xa0, 0x98, 0xff),
-    },
-};
+pub const DISABLED_TEXT: Key<Color> = Key::new("lilac.theme.disabled_text");
+pub const DISABLED_PLACEHOLDER_TEXT: Key<Color> = Key::new("lilac.theme.disabled_placeholder_text");
+pub const DISABLED_ACCENT: Key<Color> = Key::new("lilac.theme.disabled_accent");
+pub const DISABLED_BASE: Key<Color> = Key::new("lilac.theme.disabled_base");
+pub const DISABLED_THREED_HIGHLIGHT: Key<Color> = Key::new("lilac.theme.disabled_threed_highlight");
+pub const DISABLED_THREED_SHADOW_1: Key<Color> = Key::new("lilac.theme.disabled_threed_shadow_1");
+pub const DISABLED_THREED_SHADOW_2: Key<Color> = Key::new("lilac.theme.disabled_threed_shadow_2");
+pub const DISABLED_HOVER_HIGHLIGHT: Key<Color> = Key::new("lilac.theme.disabled_hover_highlight");
+
+pub const INACTIVE_TITLE_TEXT_COLOR: Key<Color> = Key::new("lilac.theme.inactive_title_text_color");
+pub const INACTIVE_TITLE_TEXT_SHADOW: Key<Color> =
+    Key::new("lilac.theme.inactive_title_text_shadow");
+pub const INACTIVE_TITLE_STRIPES: Key<Color> = Key::new("lilac.theme.inactive_title_stripes");
+pub const INACTIVE_TITLE_BAR_COLOR: Key<(Color, Color)> =
+    Key::new("lilac.theme.inactive_title_bar_color");
