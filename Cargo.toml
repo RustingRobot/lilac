@@ -6,7 +6,4 @@ description = "Widget library and tweaks for the druid UI toolkit"
 license = "MIT"
 
 [dependencies]
-druid = "0.8.3"
-piet-common = "0.3"
-tracing = "0.1.22"
-replace_with = "0.1.7"
+clap = {version = "4.4.17", features = ["derive"]}
