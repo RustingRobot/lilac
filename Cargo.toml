@@ -2,7 +2,7 @@
 name = "lilac"
 version = "0.1.0"
 edition = "2021"
-description = "Widget library and tweaks for the druid UI toolkit"
+description = "Static site generator-esque tool for adding include statements to HTML"
 license = "MIT"
 
 [dependencies]
