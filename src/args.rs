@@ -16,9 +16,11 @@ pub enum CmdType{
     ///Create a new Lilac project
     Init,
     ///Remove Lilac from this directory
+    Remove,
+    ///Remove all compiled files
     Clean,
-    ///Compile all files
+    ///Compile all changed files
     Build,
-    ///Run a localhost and update live
-    Serve
+    ///Run a localhost with live-update
+    Run
 }
