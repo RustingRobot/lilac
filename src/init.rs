@@ -1,10 +1,17 @@
-use std::fs;
+use std::fs::{self, File};
 use std::io::{prelude::*, ErrorKind};
 use std::process;
+use toml::to_string;
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct Config {
+    resources_path: String,
+    directory_index: String
+}
 
 pub fn init(){
-    let dir_result = fs::create_dir(".lilac");
-    match dir_result{
+    match try_create_files(){
         Err(e) => {
             match e.kind(){
                 ErrorKind::AlreadyExists => print!("This directory is already using lilac"),
@@ -15,4 +22,17 @@ pub fn init(){
         }
         _ => {}
     }
+}
+
+fn try_create_files() -> std::io::Result<()>{
+    let default_config = Config {
+        resources_path: "/res".to_owned(),
+        directory_index: "/index.html".to_owned()
+    };
+
+    fs::create_dir_all("_lilac/build")?;
+    let toml_string = to_string(&default_config).unwrap();
+    let mut file = File::create("_lilac/settings.toml")?;
+    file.write_all(toml_string.as_bytes())?;
+    Ok(())
 }
