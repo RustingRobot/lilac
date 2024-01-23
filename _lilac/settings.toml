@@ -1,2 +1,2 @@
-resources_path = "/res"
+resources_path = "/static"
 directory_index = "/index.html"

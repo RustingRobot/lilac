@@ -26,7 +26,7 @@ pub fn init(){
 
 fn try_create_files() -> std::io::Result<()>{
     let default_config = Config {
-        resources_path: "/res".to_owned(),
+        resources_path: "/static".to_owned(),
         directory_index: "/index.html".to_owned()
     };
 
