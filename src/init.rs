@@ -6,8 +6,8 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 struct Config {
-    resources_path: String,
-    directory_index: String
+    directory_index: String,
+    port: u16
 }
 
 pub fn init(){
@@ -26,8 +26,8 @@ pub fn init(){
 
 fn try_create_files() -> std::io::Result<()>{
     let default_config = Config {
-        resources_path: "/static".to_owned(),
-        directory_index: "/index.html".to_owned()
+        directory_index: "/index.html".to_owned(),
+        port: 8080,
     };
 
     fs::create_dir_all("_lilac/build")?;

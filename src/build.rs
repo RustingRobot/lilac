@@ -1,0 +1,1 @@
+//use std::fs::hard_link for large files like images and stuff

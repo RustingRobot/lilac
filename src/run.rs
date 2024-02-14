@@ -5,9 +5,27 @@ use std::{
 use toml::Table;
 
 pub fn run(){
-    print!("localhost server is online! Press Ctrl + C to quit...\n");
-    let _ = open::that("http://127.0.0.1:8001/");
-    let listener = TcpListener::bind("127.0.0.1:8001").unwrap();
+
+    let config = match fs::read_to_string("_lilac/settings.toml"){
+        Err(_) => {
+            print!("Could not read from settings.toml :( Is lilac properly initiated?");
+            process::exit(1);
+        }
+        Ok(r) => r.parse::<Table>().unwrap()
+    };
+
+    let listener = match TcpListener::bind(format!("127.0.0.1:{}",config["port"])){
+        Err(_) => {
+            print!("Port {} is already in use. Consider changing it in _lilac/settings.toml", config["port"]);
+            process::exit(1);
+        }
+        Ok(r) => r
+    };
+
+    println!("\nlocalhost server is online!");
+    println!("http://127.0.0.1:{}/", config["port"]);
+    println!("\nPress Ctrl + C to quit...");
+
     for stream in listener.incoming() {
         let stream = stream.unwrap();
         handle_connection(stream);
