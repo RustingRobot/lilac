@@ -1,8 +1,9 @@
 use std::{
-    io::{prelude::*, BufReader},
-    net::{TcpListener, TcpStream}, fs, process,
+    fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, path::Path, process, sync::mpsc, time::Duration, thread
 };
 use toml::Table;
+use notify::RecursiveMode;
+use notify_debouncer_mini::new_debouncer;
 
 pub fn run(){
 
@@ -21,6 +22,8 @@ pub fn run(){
         }
         Ok(r) => r
     };
+
+    thread::spawn(|| start_watcher());
 
     println!("\nlocalhost server is online!");
     println!("http://127.0.0.1:{}/", config["port"]);
@@ -65,4 +68,24 @@ fn handle_connection(mut stream: TcpStream) {
     
     let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n");
     stream.write_all(&[response.as_bytes(), &contents].concat()).unwrap();
+}
+
+fn start_watcher(){
+    let (tx, rx) = mpsc::channel();
+    let mut debouncer = new_debouncer(Duration::from_secs(1), tx).unwrap();
+
+    debouncer
+        .watcher()
+        .watch(Path::new("."), RecursiveMode::Recursive)
+        .unwrap();
+
+    // print all events, non returning
+    for result in rx {
+        match result {
+            Ok(events) => events
+                .iter()
+                .for_each(|event| println!("Event {event:?}")),
+            Err(error) => println!("Error {error:?}"),
+        }
+    }
 }
