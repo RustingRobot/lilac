@@ -1,6 +1,7 @@
 mod args;
 mod init;
 mod run;
+mod build;
 
 use args::LilacArgs;
 use args::CmdType::*;
@@ -35,7 +36,7 @@ fn main() {
             print!("NO")
         },
         Build =>{
-            print!("NO")
+            build::build()
         },
         Run =>{
             run::run()

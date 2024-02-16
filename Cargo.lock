@@ -233,6 +233,7 @@ dependencies = [
  "notify-debouncer-mini",
  "serde",
  "toml",
+ "walkdir",
 ]
 
 [[package]]

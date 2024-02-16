@@ -26,7 +26,7 @@ pub fn run(){
     thread::spawn(|| start_watcher());
 
     println!("\nlocalhost server is online!");
-    println!("http://127.0.0.1:{}/", config["port"]);
+    println!("http://localhost:{}/", config["port"]);
     println!("\nPress Ctrl + C to quit...");
 
     for stream in listener.incoming() {
