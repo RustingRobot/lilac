@@ -1,11 +1,8 @@
-mod args;
-mod init;
-mod run;
-mod build;
+mod commands;
+mod settings;
 
-use args::LilacArgs;
-use args::CmdType::*;
 use clap::Parser;
+use commands::*;
 use std::fs;
 use std::io::ErrorKind;
 use std::process;

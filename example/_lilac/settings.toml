@@ -1,2 +1,4 @@
 directory_index = "/index.html"
-port = 8080
+webserver_port = 8080
+start_delimiter = "[["
+end_delimiter = "]]"
