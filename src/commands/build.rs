@@ -2,6 +2,7 @@ use std::{fs, fs::File, path::Path, process};
 use walkdir::WalkDir;
 use regex::Regex;
 use regex::escape;
+use crate::compiler::lexer;
 use crate::settings;
 
 
@@ -55,5 +56,7 @@ pub fn build(){
 }
 
 fn process_file(path: &Path, content: String){
+    print!("in {:?} ", path);
     File::create(path).unwrap();
+    lexer::build_token_tree(content);
 }
