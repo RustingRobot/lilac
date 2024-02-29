@@ -7,6 +7,15 @@ use crate::settings;
 
 
 pub fn build(){
+    lexer::build_token_tree("put block here:[[put path/to/file]] \
+                            for block here:[[for path/other/thing as loop]] \
+                            end block here:[[end]] \
+                            run block here:[[run path/path]] \
+                            error:[[]] \
+                            error:[[shgloopy path/or/something]] \
+                            error:[[put]] \
+                            error:[[for path as wool thing]]".to_owned());
+    return;
     if !Path::new("./_lilac").exists(){
         print!("This path does not contain a _lilac directory!");
         process::exit(1);
