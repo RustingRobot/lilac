@@ -1,25 +1,17 @@
 use std::{
     fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, path::Path, process, sync::mpsc, time::Duration, thread
 };
-use toml::Table;
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 
-use crate::settings;
+use crate::settings::{self, Settings};
 
 pub fn run(){
+    let settings = settings::request_settings();
 
-    let config = match fs::read_to_string("_lilac/settings.toml"){
+    let listener = match TcpListener::bind(format!("127.0.0.1:{}",settings.webserver_port)){
         Err(_) => {
-            print!("Could not read from settings.toml :( Is lilac properly initiated?");
-            process::exit(1);
-        }
-        Ok(r) => r.parse::<Table>().unwrap()
-    };
-
-    let listener = match TcpListener::bind(format!("127.0.0.1:{}",config["port"])){
-        Err(_) => {
-            print!("Port {} is already in use. Consider changing it in _lilac/settings.toml", config["port"]);
+            print!("Port {} is already in use. Consider changing it in _lilac/settings.toml", settings.webserver_port);
             process::exit(1);
         }
         Ok(r) => r
@@ -28,29 +20,28 @@ pub fn run(){
     thread::spawn(|| start_watcher());
 
     println!("\nlocalhost server is online!");
-    println!("http://localhost:{}/", config["port"]);
+    println!("http://localhost:{}/", settings.webserver_port);
     println!("\nPress Ctrl + C to quit...");
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        handle_connection(stream);
+        handle_connection(stream, &settings);
     }
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     let buf_reader = BufReader::new(&mut stream);
     let request_line = buf_reader.lines().next().unwrap().unwrap();
 
     let mut status_line = "HTTP/1.1 404 NOT FOUND";
-    let settings = settings::request_settings();
 
     //determine, what file the requester actually wants
     let path = {
     if request_line == "GET / HTTP/1.1" { //root file
-        settings.directory_index
+        &settings.directory_index
     }else{
         let options = request_line.split(" ").collect::<Vec<_>>();
-        options[1].to_owned() //might break on invalid HTTP requests :v
+        options[1] //might break on invalid HTTP requests :v
     }};
 
     //serve file if it exists. If not send 404
