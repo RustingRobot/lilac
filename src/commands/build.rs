@@ -8,7 +8,7 @@ use crate::settings;
 
 
 pub fn build(){
-    lexer::build_token_tree("put block here:[[put path/to/file]] \
+    lexer::extract_tokens("put block here:[[put path/to/file]] \
                             for block here:[[for path/other/thing as loop]] \
                             end block here:[[end]] \
                             run block here:[[run path/path]] \
@@ -70,5 +70,5 @@ pub fn build(){
 fn process_file(path: &Path, content: String){
     print!("in {:?} ", path);
     File::create(path).unwrap();
-    lexer::build_token_tree(content);
+    lexer::extract_tokens(content);
 }

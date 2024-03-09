@@ -33,7 +33,7 @@ enum ErrType{
 }
 
 #[derive(Debug)]
-enum Token{
+pub enum Token{
     Block(Span),
     Command(Span),
     Put(Span, Path),
@@ -44,7 +44,7 @@ enum Token{
     Error(Span, ErrType)
 }
 
-pub fn build_token_tree(content: String){
+pub fn extract_tokens(content: String) -> Vec<Token>{
     let mut tokens: Vec<Token> = Vec::new();
     let settings = settings::request_settings();
     let lilac_file = Regex::new(&format!("{}.*?{}", escape(&settings.start_delimiter), escape(&settings.end_delimiter))).expect("Regex error?");
@@ -130,15 +130,5 @@ pub fn build_token_tree(content: String){
         err_list(errors);
     }
 
-    //println!("tokens {:?}", tokens);
-
-    for t in tokens{
-        match t {
-            Token::Command(span) | Token::Block(span) | Token::Subsection(span) | Token::Put(span, _) | Token::For(span, _, _) | Token::End(span) | Token::Run(span, _) | Token::Error(span, _) => {
-                let text: String = content.chars().skip(span.start).take(span.end - span.start).collect();
-                print!("text block: {:?} ", text);
-                println!("token: {:?}", t);
-            }
-        }
-    }
+    tokens
 }
