@@ -2,17 +2,17 @@ use std::fs::{self, File};
 use std::io::{prelude::*, ErrorKind};
 use std::process;
 use toml::to_string;
+use crate::exit::err_exit;
 use crate::settings::Settings;
 
 pub fn init(){
     match try_create_files(){
         Err(e) => {
             match e.kind(){
-                ErrorKind::AlreadyExists => print!("This directory is already using lilac"),
-                ErrorKind::PermissionDenied => print!("Cannot create files here: permission denied"),
-                _ => print!("Something unexpected has happened! {:?}", e)
+                ErrorKind::AlreadyExists => err_exit("This directory is already using lilac"),
+                ErrorKind::PermissionDenied => err_exit("Cannot create files here: permission denied"),
+                _ => err_exit(&format!("Something unexpected has happened! {:?}", e))
             };
-            process::exit(1);
         }
         _ => {}
     }

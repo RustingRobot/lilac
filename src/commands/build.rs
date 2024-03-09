@@ -3,6 +3,7 @@ use walkdir::WalkDir;
 use regex::Regex;
 use regex::escape;
 use crate::compiler::lexer;
+use crate::exit::err_exit;
 use crate::settings;
 
 
@@ -11,14 +12,16 @@ pub fn build(){
                             for block here:[[for path/other/thing as loop]] \
                             end block here:[[end]] \
                             run block here:[[run path/path]] \
+                            put block here:[[put path/to/file.subsection]] \
+                            put block here:[[put path/to/file.sub.subsection]] \
+                            error:[[put path/to.subsection/file]] \
                             error:[[]] \
                             error:[[shgloopy path/or/something]] \
                             error:[[put]] \
                             error:[[for path as wool thing]]".to_owned());
     return;
     if !Path::new("./_lilac").exists(){
-        print!("This path does not contain a _lilac directory!");
-        process::exit(1);
+        err_exit("This path does not contain a _lilac directory!");
     }
 
     // delete all files, that we want to refresh. we could reserve them and only

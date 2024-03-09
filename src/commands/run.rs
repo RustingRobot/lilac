@@ -4,15 +4,14 @@ use std::{
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 
-use crate::settings::{self, Settings};
+use crate::{exit::err_exit, settings::{self, Settings}};
 
 pub fn run(){
     let settings = settings::request_settings();
 
     let listener = match TcpListener::bind(format!("127.0.0.1:{}",settings.webserver_port)){
         Err(_) => {
-            print!("Port {} is already in use. Consider changing it in _lilac/settings.toml", settings.webserver_port);
-            process::exit(1);
+            err_exit(&format!("Port {} is already in use. Consider changing it in _lilac/settings.toml", settings.webserver_port));
         }
         Ok(r) => r
     };

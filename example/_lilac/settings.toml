@@ -1,4 +1,0 @@
-directory_index = "/index.html"
-webserver_port = 8080
-start_delimiter = "[["
-end_delimiter = "]]"

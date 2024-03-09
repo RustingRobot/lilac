@@ -1,9 +1,11 @@
 mod commands;
 mod settings;
 mod compiler;
+mod exit;
 
 use clap::Parser;
 use commands::*;
+use exit::err_exit;
 use std::fs;
 use std::io::ErrorKind;
 use std::process;
@@ -21,11 +23,10 @@ fn main() {
             match result{
                 Err(e) => {
                     match e.kind(){
-                        ErrorKind::NotFound => print!("This directory does not use lilac"),
-                        ErrorKind::PermissionDenied => print!("Cannot delete files here: permission denied"),
-                        _ => print!("Something unexpected has happened! {:?}", e)
+                        ErrorKind::NotFound => err_exit("This directory does not use lilac"),
+                        ErrorKind::PermissionDenied => err_exit("Cannot delete files here: permission denied"),
+                        _ => err_exit(&format!("Something unexpected has happened! {:?}", e))
                     };
-                    process::exit(1);
                 }
                 _ => {}
             }

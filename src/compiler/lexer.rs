@@ -1,5 +1,5 @@
 use regex::{escape, Regex};
-use crate::settings;
+use crate::{exit::err_list, settings};
 
 #[derive(Debug, Clone, Copy)]
 struct Span{
@@ -9,6 +9,20 @@ struct Span{
 
 #[derive(Debug)]
 struct Path{path: String}
+
+impl Path {
+    fn check_path(&self) -> bool{
+        self.path.rfind('.');
+        true
+    }
+
+    fn dir_path(&self) -> &str {
+        match self.path.rfind('.') {
+            Some(i) => &self.path[..i],
+            None => &self.path
+        }
+    }
+}
 #[derive(Debug)]
 struct Iterator{iterator: String}
 #[derive(Debug)]
@@ -92,7 +106,29 @@ pub fn build_token_tree(content: String){
         }
     }
 
-    
+    //error handling:
+    let mut errors: Vec<String> = vec![];
+    for t in &tokens {
+        match t {
+            Token::Error(span, err_type) => {
+                let error_msg = format!("{}\n{}", match err_type {
+                    ErrType::EmptyCmd => "empty command!",
+                    ErrType::InvalidCmd => "invalid command!",
+                    ErrType::WrongArgCount => "wrong amount of arguments!",
+                }, format!("\"{0}\" at {1} to {2}\n",&content[span.start..span.end] , span.start, span.end));
+                errors.push(error_msg);
+            }
+            //check if path exists
+            Token::Put(_, path) | Token::For(_, path, _) | Token::Run(_, path) => {
+                println!("path: {}", path.dir_path());
+                path.check_path();
+            }
+            _ => {}
+        }
+    }
+    if !errors.is_empty() {
+        err_list(errors);
+    }
 
     //println!("tokens {:?}", tokens);
 
@@ -103,7 +139,6 @@ pub fn build_token_tree(content: String){
                 print!("text block: {:?} ", text);
                 println!("token: {:?}", t);
             }
-            _ => {}
         }
     }
 }
