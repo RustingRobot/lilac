@@ -1,16 +1,16 @@
-[[put path/to/file.subsection]]
+[[put path/to/file:subsection]]
 
 [[for path/to/file as file]] !! parent path that will be looped and a name of the current looped part seperated by as
-    [[put {file}/subfile.subsection]]
+    [[put {file}/subfile:subsection]]
 [[end]] !! end itterate block with this
 
 [[for path/to/file/week as i]] !! if /week is a directory "for" will loop over all files in that directory. If /week is a file "for" will lopp over all subsections of that file
-    [[for {i}.day as j]] !! we have to use different variables for nested itterators
-        [[put {j}.content]] !! the last itterate dictates the base path (YES: {j}-day NO: {i}-week)
+    [[for {i}:day as j]] !! we have to use different variables for nested itterators
+        [[put {j}:content]] !! the last itterate dictates the base path (YES: {j}-day NO: {i}-week)
     [[end]]
 [[end]]
 
-[[run path/to/bash/script]] !! no .subsections
+[[run path/to/bash/script]] !! no :subsections
 
 
 == subsection
@@ -29,9 +29,9 @@ RSS example (maybe not the most practical but it's an example):
   <copyright>Copyright 2024, Me<\copyright>
 [[for data/news as news]]
   <item>
-    <title>[[put {news}.title]]</title>
+    <title>[[put {news}:title]]</title>
     <link>https://example.com/news/[[put {news}.title]]</link>
-    <description>[[put {news}.description]]</description>
+    <description>[[put {news}:description]]</description>
     <author>name@email.com</author>
   </item>
 [[end]]
@@ -42,12 +42,13 @@ RSS example (maybe not the most practical but it's an example):
 === FILE: data/news.txt ===
 
 = 1
-== name
-firstEntry
-== description
-this is the first entry
+  == name
+  firstEntry
+  this is the test
+  == description
+  this is the first entry
 = 2
-== name
-lastEntry
-== description
-this is the end of my RSS
+  == name
+  lastEntry
+  == description
+  this is the end of my RSS

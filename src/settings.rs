@@ -8,7 +8,8 @@ pub struct Settings {
     pub directory_index: String,
     pub webserver_port: u16,
     pub start_delimiter: String,
-    pub end_delimiter: String
+    pub end_delimiter: String,
+    pub subsection_marker: char
 }
 
 pub fn request_settings() -> Settings{

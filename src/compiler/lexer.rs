@@ -1,50 +1,70 @@
-use regex::{escape, Regex};
-use crate::{exit::err_list, settings};
+use std::path::Path;
 
-#[derive(Debug, Clone, Copy)]
-struct Span{
-    start: usize,
-    end: usize
-}
+use regex::{escape, Regex, RegexBuilder};
+use crate::{exit::{err_exit, err_list}, settings};
 
-#[derive(Debug)]
-struct Path{path: String}
+use super::Span;
 
-impl Path {
+#[derive(Debug, PartialEq)]
+pub struct LilacPath{pub path: String}
+
+impl LilacPath {
     fn check_path(&self) -> bool{
-        self.path.rfind('.');
+        let dir = self.directory();
+        let sub = self.subsection();
+
+        if dir.contains(":") || sub.contains("/") {
+            err_exit(&format!("invalid path format!\n{}", self.path));
+        }
+
+        if !Path::new(dir).exists(){
+            err_exit(&format!("path or file does not exist!\n{}", self.path))
+        }
+        println!("path {}", Path::new(self.directory()).is_dir());
         true
     }
 
-    fn dir_path(&self) -> &str {
-        match self.path.rfind('.') {
-            Some(i) => &self.path[..i],
+    fn directory(&self) -> &str {
+        match self.path.split_once(':') {
+            Some((dir, _)) => dir,
             None => &self.path
         }
     }
+
+    fn subsection(&self) -> &str {
+        match self.path.split_once(':') {
+            Some((_, sub)) => sub,
+            None => ""
+        }
+    }
 }
-#[derive(Debug)]
-struct Iterator{iterator: String}
-#[derive(Debug)]
-enum ErrType{
+
+#[derive(Debug, PartialEq)]
+pub struct Iterator{pub iterator: String}
+
+#[derive(Debug, PartialEq)]
+pub struct Indent{pub count: i8}
+
+#[derive(Debug, PartialEq)]
+pub enum ErrType{
     EmptyCmd,
     InvalidCmd,
     WrongArgCount
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token{
     Block(Span),
     Command(Span),
-    Put(Span, Path),
-    For(Span, Path, Iterator),
+    Put(Span, LilacPath),
+    For(Span, LilacPath, Iterator),
     End(Span),
-    Run(Span, Path),
-    Subsection(Span),
+    Run(Span, LilacPath),
+    Subsection(Span, Indent),
     Error(Span, ErrType)
 }
 
-pub fn extract_tokens(content: String) -> Vec<Token>{
+pub fn extract_commands(content: &str) -> Vec<Token>{
     let mut tokens: Vec<Token> = Vec::new();
     let settings = settings::request_settings();
     let lilac_file = Regex::new(&format!("{}.*?{}", escape(&settings.start_delimiter), escape(&settings.end_delimiter))).expect("Regex error?");
@@ -82,19 +102,19 @@ pub fn extract_tokens(content: String) -> Vec<Token>{
                 *t = match cmd_parts[0].to_lowercase().as_str() {
                     "put" => {
                         if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Put(*span, Path{ path: cmd_parts[1].to_owned()})
+                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned()})
                         }
                     }
                     "for" => {
                         if cmd_parts.len() != 4 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::For(*span, Path{ path: cmd_parts[1].to_owned()}, Iterator{ iterator: cmd_parts[3].to_owned()})
+                            Token::For(*span, LilacPath{ path: cmd_parts[1].to_owned()}, Iterator{ iterator: cmd_parts[3].to_owned()})
                         }
                     }
                     "end" => {
                         Token::End(*span)
                     }
                     "run" => { if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Run(*span, Path{ path: cmd_parts[1].to_owned()})
+                            Token::Run(*span, LilacPath{ path: cmd_parts[1].to_owned()})
                         }
                     }
                     _ => {
@@ -120,7 +140,6 @@ pub fn extract_tokens(content: String) -> Vec<Token>{
             }
             //check if path exists
             Token::Put(_, path) | Token::For(_, path, _) | Token::Run(_, path) => {
-                println!("path: {}", path.dir_path());
                 path.check_path();
             }
             _ => {}
@@ -128,6 +147,37 @@ pub fn extract_tokens(content: String) -> Vec<Token>{
     }
     if !errors.is_empty() {
         err_list(errors);
+    }
+
+    tokens
+}
+
+pub fn extract_subsections(content: &str) -> Vec<Token>{
+    let mut tokens: Vec<Token> = Vec::new();
+    let settings = settings::request_settings();
+    let lilac_file = RegexBuilder::new(&format!("^{}{{1,}}.*", escape(&settings.subsection_marker.to_string()))).multi_line(true).build().expect("Regex error?");
+
+    let matches = lilac_file.find_iter(&content);
+    let mut last_block = 0;
+    for m in matches {
+        // don't add block if match is at start of file or directly after the previous match
+        if last_block != m.start() {
+            tokens.push(Token::Block(Span {start: last_block, end: m.start()}))
+        }
+        let mut counter = 0;
+        for c in content[m.start()..m.end()].chars() {
+            if c != settings.subsection_marker{
+                break;
+            }
+            counter += 1;
+        }
+
+        tokens.push(Token::Subsection(Span {start: m.start(), end: m.end()}, Indent{count: counter}));
+        last_block = m.end();
+    }
+    // add last block if no match is at the end of the file
+    if last_block != content.len() {
+        tokens.push(Token::Block(Span {start: last_block, end: content.len()}))
     }
 
     tokens

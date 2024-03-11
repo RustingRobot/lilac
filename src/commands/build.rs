@@ -8,17 +8,9 @@ use crate::settings;
 
 
 pub fn build(){
-    lexer::extract_tokens("put block here:[[put path/to/file]] \
-                            for block here:[[for path/other/thing as loop]] \
-                            end block here:[[end]] \
-                            run block here:[[run path/path]] \
-                            put block here:[[put path/to/file.subsection]] \
-                            put block here:[[put path/to/file.sub.subsection]] \
-                            error:[[put path/to.subsection/file]] \
-                            error:[[]] \
-                            error:[[shgloopy path/or/something]] \
-                            error:[[put]] \
-                            error:[[for path as wool thing]]".to_owned());
+    let str = lexer::extract_subsections("==this is a test\n=test\nwow\n==wow\n================ok cool\nwow this is the end of the world\n AS WE KNOW IT\n=");
+    println!("{:?}", str);
+    //lexer::extract_commands("put block here:[[put _lilac/build]]".to_owned());
     return;
     if !Path::new("./_lilac").exists(){
         err_exit("This path does not contain a _lilac directory!");
@@ -70,5 +62,5 @@ pub fn build(){
 fn process_file(path: &Path, content: String){
     print!("in {:?} ", path);
     File::create(path).unwrap();
-    lexer::extract_tokens(content);
+    lexer::extract_commands(&content);
 }
