@@ -1,3 +1,9 @@
+use std::collections::VecDeque;
+
+use crate::exit::err_exit;
+
+use self::lexer::Indent;
+
 pub mod lexer;
 pub mod parser;
 
@@ -5,6 +11,74 @@ pub mod parser;
 pub struct Span{
     pub start: usize,
     pub end: usize
+}
+
+#[derive(Debug, PartialEq)]
+pub struct SubsectionNode<'a>{
+    pub name: &'a str,
+    pub content: &'a str,
+    pub children: Vec<SubsectionNode<'a>>
+}
+
+impl<'a> SubsectionNode<'a> {
+    fn add_node(&mut self, content: &'a str, s_info: (&Span, &Indent), block_text: &'a str, indent: usize) -> Result<(), ()>{
+        if indent > 0 {
+            if let Some(last) = self.children.last_mut() {
+                return last.add_node(content, s_info, block_text, indent - 1);
+            } else {
+                return Err(());
+            }
+        } else {
+            self.children.push(
+                SubsectionNode { 
+                name: &content[(s_info.0.start + usize::from(s_info.1.count))..s_info.0.end], 
+                content: block_text, 
+                children: vec![] 
+            });
+            return Ok(())
+        }
+    }
+
+    pub fn contains(&self, path: &[&str]) -> bool {
+        if path.is_empty() {
+            true
+        } else {
+            match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
+                Some(c) => c.contains(&path[1..]),
+                None => false,
+            }
+        }
+    }
+
+    pub fn get(&self, path: &[&str]) -> &str {
+        if path.is_empty() {
+            self.content
+        } else {
+            match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
+                Some(c) => c.get(&path[1..]),
+                None => err_exit(&format!("subsection does not exist: {:?}", path)),
+            }
+        }
+    }
+
+    pub fn visualize(&self){
+        self.visualize_layer(0);
+    }
+
+    fn visualize_layer(&self, level: usize) {
+        println!(r"{}> {}: {}", "-".repeat(level), self.name, self.content.replace("\n", "\\n"));
+        self.children.iter().for_each(|c| c.visualize_layer(level + 1));
+    }
+}
+
+impl<'a> Default for SubsectionNode<'a> {
+    fn default() -> SubsectionNode<'a> {
+        SubsectionNode {
+            name: "",
+            content: "",
+            children: vec![]
+        }
+    }
 }
 
 mod tests{

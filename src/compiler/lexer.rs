@@ -43,7 +43,7 @@ impl LilacPath {
 pub struct Iterator{pub iterator: String}
 
 #[derive(Debug, PartialEq)]
-pub struct Indent{pub count: i8}
+pub struct Indent{pub count: usize}
 
 #[derive(Debug, PartialEq)]
 pub enum ErrType{

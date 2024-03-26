@@ -42,13 +42,13 @@ RSS example (maybe not the most practical but it's an example):
 === FILE: data/news.txt ===
 
 = 1
-  == name
-  firstEntry
-  this is the test
-  == description
-  this is the first entry
+== name
+firstEntry
+this is the test
+== description
+this is the first entry
 = 2
-  == name
-  lastEntry
-  == description
-  this is the end of my RSS
+== name
+lastEntry
+== description
+this is the end of my RSS

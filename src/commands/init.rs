@@ -1,6 +1,5 @@
 use std::fs::{self, File};
 use std::io::{prelude::*, ErrorKind};
-use std::process;
 use toml::to_string;
 use crate::exit::err_exit;
 use crate::settings::Settings;

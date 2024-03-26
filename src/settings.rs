@@ -1,4 +1,4 @@
-use std::{fs, path::Path, process};
+use std::{fs, path::Path};
 use serde::{Deserialize, Serialize};
 
 use crate::exit::err_exit;

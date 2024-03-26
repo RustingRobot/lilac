@@ -1,15 +1,20 @@
-use std::{fs, fs::File, path::Path, process};
+use std::{fs, fs::File, path::Path};
 use walkdir::WalkDir;
 use regex::Regex;
 use regex::escape;
 use crate::compiler::lexer;
+use crate::compiler::parser;
 use crate::exit::err_exit;
 use crate::settings;
 
 
 pub fn build(){
-    let str = lexer::extract_subsections("==this is a test\n=test\nwow\n==wow\n================ok cool\nwow this is the end of the world\n AS WE KNOW IT\n=");
-    println!("{:?}", str);
+    let str = "root content\n=Headet\ntext\n==One\ntest\n==Two\nbest\n===cool\ntexo\n=Level\nsvell\n=Entry";
+    let tokens = lexer::extract_subsections(str);
+    let tree = parser::build_subsection_tree(str, tokens, "test/file.txt");
+    tree.visualize();
+    println!("{:?}",tree.contains(&["Headet","Two"]));
+    println!("{:?}",tree.get(&[]));
     //lexer::extract_commands("put block here:[[put _lilac/build]]".to_owned());
     return;
     if !Path::new("./_lilac").exists(){

@@ -8,7 +8,6 @@ use commands::*;
 use exit::err_exit;
 use std::fs;
 use std::io::ErrorKind;
-use std::process;
 
 fn main() {
     let args = LilacArgs::parse();
