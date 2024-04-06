@@ -1,10 +1,6 @@
 use crate::exit::err_exit;
 
-use super::{lexer::Token, SubsectionNode};
-
-pub struct CommandNode{
-
-}
+use super::{lexer::Token, SubsectionNode, TokenNode};
 
 pub fn build_subsection_tree<'a>(content: &'a str, mut tokens: Vec<Token>, file: &str) -> SubsectionNode<'a>{    
     let mut root_node = SubsectionNode{ name: "root", ..Default::default()};
@@ -29,6 +25,10 @@ pub fn build_subsection_tree<'a>(content: &'a str, mut tokens: Vec<Token>, file:
     root_node
 }
 
-pub fn build_syntax_tree(){
-    
+pub fn build_syntax_tree<'a>(content: &'a str, mut tokens: Vec<Token>, file: &str) -> TokenNode{
+    todo!()
+}
+
+pub fn parse_syntax_tree(rootNode: TokenNode){
+
 }

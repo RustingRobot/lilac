@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::exit::err_exit;
 
-use self::lexer::Indent;
+use self::lexer::{Indent, Token};
 
 pub mod lexer;
 pub mod parser;
@@ -81,10 +81,16 @@ impl<'a> Default for SubsectionNode<'a> {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub struct TokenNode{
+    pub content: Token,
+    pub children: Vec<TokenNode>
+}
+
 mod tests{
     use std::env;
     use std::sync::Once;
-    use crate::compiler::{lexer::{self, Indent, LilacPath, Token::*}, Span};
+    use crate::{compiler::{lexer::{self, Indent, LilacPath, Token::*}, Span}, settings};
 
     static INIT: Once = Once::new();
 
@@ -125,6 +131,7 @@ mod tests{
     #[test]
     fn common_commands() {
         init_env();
+        let settings = settings::request_settings();
         let tokens = lexer::extract_commands("\
             put block here:[[put path/to/file.txt]]\
             for block here:[[for path/to/files as loop]]\
@@ -135,17 +142,17 @@ mod tests{
         assert_eq!(tokens, 
         vec![
             Block(Span { start: 0, end: 15 }), 
-            Put(Span { start: 15, end: 39 }, LilacPath { path: "path/to/file.txt".into() }), 
+            Put(Span { start: 15, end: 39 }, LilacPath { path: "path/to/file.txt".into(), marker: settings.subsection_marker }), 
             Block(Span { start: 39, end: 54 }), 
-            For(Span { start: 54, end: 83 }, LilacPath { path: "path/to/files".into() }, lexer::Iterator { iterator: "loop".into() }), 
+            For(Span { start: 54, end: 83 }, LilacPath { path: "path/to/files".into(), marker: settings.subsection_marker }, lexer::Iterator { iterator: "loop".into() }), 
             Block(Span { start: 83, end: 98 }), 
             End(Span { start: 98, end: 105 }), 
             Block(Span { start: 105, end: 120 }), 
-            Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into() }), 
+            Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into(), marker: settings.subsection_marker }), 
             Block(Span { start: 153, end: 168 }), 
-            Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into() }), 
+            Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into(), marker: settings.subsection_marker }), 
             Block(Span { start: 203, end: 218 }), 
-            Put(Span { start: 218, end: 257 }, LilacPath { path: "path/to/file.txt:sub:subsection".into() })]);
+            Put(Span { start: 218, end: 257 }, LilacPath { path: "path/to/file.txt:sub:subsection".into(), marker: settings.subsection_marker })]);
     }
 
     #[test]
@@ -173,13 +180,13 @@ mod tests{
     #[should_panic(expected = "subsection does not exist")]
     fn subsection_not_found() {
         init_env();
-        lexer::extract_commands("[[put this/subsection/does:not:exist]]");
+        lexer::extract_commands("[[put path/to/file.txt:does_not_exist]]");
     }
 
     #[test]
     fn common_subsections(){
         init_env();
-        let tokens = lexer::extract_subsections("top level\n=one\nheader\n==one/one\ncontent\n=two\nheader\n==two/one\n===two/one/one");
+        let tokens = lexer::extract_subsections("top level\n:one\nheader\n::one/one\ncontent\n:two\nheader\n::two/one\n:::two/one/one");
         assert_eq!(tokens, 
             vec![
                 Block(Span { start: 0, end: 10 }), 

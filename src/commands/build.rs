@@ -3,20 +3,43 @@ use walkdir::WalkDir;
 use regex::Regex;
 use regex::escape;
 use crate::compiler::lexer;
-use crate::compiler::parser;
+use crate::compiler::lexer::visualize_tokens;
 use crate::exit::err_exit;
 use crate::settings;
 
 
 pub fn build(){
-    let str = "root content\n=Headet\ntext\n==One\ntest\n==Two\nbest\n===cool\ntexo\n=Level\nsvell\n=Entry";
+/*     let str = "root content\n=Headet\ntext\n==One\ntest\n==Two\nbest\n===cool\ntexo\n=Level\nsvell\n=Entry";
     let tokens = lexer::extract_subsections(str);
     let tree = parser::build_subsection_tree(str, tokens, "test/file.txt");
     tree.visualize();
     println!("{:?}",tree.contains(&["Headet","Two"]));
-    println!("{:?}",tree.get(&[]));
-    //lexer::extract_commands("put block here:[[put _lilac/build]]".to_owned());
+    println!("{:?}",tree.get(&[])); */
+    let content = "
+    <?xml version=1.0 encoding=UTF-8 ?>
+    <rss version=2.0>
+    
+    <channel>
+      <title>my RSS feed</title>
+      <link>https://example.com</link>
+      <description>news and more</description>
+      <copyright>Copyright 2024, Me<\\copyright>
+    [[for path/to/files as news]]
+      <item>
+        <title>[[put {news}:title]]</title>
+        <link>https://example.com/news/[[put {news}.title]]</link>
+        <description>[[put {news}:description]]</description>
+        <author>name@email.com</author>
+      </item>
+    [[end]]
+    </channel>
+    
+    </rss>
+    [[run scripts/printSomething.sh]]";
+    let tree = lexer::extract_commands(content);
+    visualize_tokens(tree, content);
     return;
+
     if !Path::new("./_lilac").exists(){
         err_exit("This path does not contain a _lilac directory!");
     }

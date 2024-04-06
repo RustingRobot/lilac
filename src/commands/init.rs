@@ -23,7 +23,7 @@ fn try_create_files() -> std::io::Result<()>{
         webserver_port: 8080,
         start_delimiter: "[[".to_owned(),
         end_delimiter: "]]".to_owned(),
-        subsection_marker: '='
+        subsection_marker: ':'
     };
 
     fs::create_dir_all("_lilac/build")?;

@@ -3,36 +3,39 @@ use std::path::Path;
 use regex::{escape, Regex, RegexBuilder};
 use crate::{exit::{err_exit, err_list}, settings};
 
-use super::Span;
+use super::{parser, Span};
 
 #[derive(Debug, PartialEq)]
-pub struct LilacPath{pub path: String}
+pub struct LilacPath{pub path: String, pub marker: char}
 
 impl LilacPath {
     fn check_path(&self) -> bool{
         let dir = self.directory();
         let sub = self.subsection();
 
-        if dir.contains(":") || sub.contains("/") {
+        if dir.contains(self.marker) || sub.contains("/") {
             err_exit(&format!("invalid path format!\n{}", self.path));
         }
 
         if !Path::new(dir).exists(){
             err_exit(&format!("path or file does not exist!\n{}", self.path))
         }
-        println!("path {}", Path::new(self.directory()).is_dir());
         true
     }
 
+    fn contains_var(&self) -> bool{
+        return self.path.contains("{");
+    }
+
     fn directory(&self) -> &str {
-        match self.path.split_once(':') {
+        match self.path.split_once(self.marker) {
             Some((dir, _)) => dir,
             None => &self.path
         }
     }
 
     fn subsection(&self) -> &str {
-        match self.path.split_once(':') {
+        match self.path.split_once(self.marker) {
             Some((_, sub)) => sub,
             None => ""
         }
@@ -102,19 +105,19 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
                 *t = match cmd_parts[0].to_lowercase().as_str() {
                     "put" => {
                         if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned()})
+                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker})
                         }
                     }
                     "for" => {
                         if cmd_parts.len() != 4 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::For(*span, LilacPath{ path: cmd_parts[1].to_owned()}, Iterator{ iterator: cmd_parts[3].to_owned()})
+                            Token::For(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker}, Iterator{ iterator: cmd_parts[3].to_owned()})
                         }
                     }
                     "end" => {
                         Token::End(*span)
                     }
                     "run" => { if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Run(*span, LilacPath{ path: cmd_parts[1].to_owned()})
+                            Token::Run(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker})
                         }
                     }
                     _ => {
@@ -140,7 +143,9 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
             }
             //check if path exists
             Token::Put(_, path) | Token::For(_, path, _) | Token::Run(_, path) => {
-                path.check_path();
+                if !path.contains_var(){
+                    path.check_path();
+                }
             }
             _ => {}
         }
@@ -181,4 +186,24 @@ pub fn extract_subsections(content: &str) -> Vec<Token>{
     }
 
     tokens
+}
+
+pub fn visualize_tokens(tokens: Vec<Token>, content: &str){
+    for token in tokens{
+        println!("{}",
+        match token{
+            Token::Block(s) => format!("{} {}", bold("Block:"), &content[s.start .. s.end]),
+            Token::Command(s) => format!("{} {}", bold("Command:"), &content[s.start .. s.end]),
+            Token::Put(s, p) => format!("{} {} {} {}", bold("Put Command:"), &content[s.start .. s.end], bold("Path:"), p.path),
+            Token::For(s, p, i) => format!("{} {} {} {} {} {}", bold("For Command:"), &content[s.start .. s.end], bold("Path:"), p.path, bold("Iterator:"), i.iterator),
+            Token::End(s) => format!("{} {}", bold("End Command:"), &content[s.start .. s.end]),
+            Token::Run(s, p) => format!("{} {} {} {}", bold("Run Command:"), &content[s.start .. s.end], bold("Path:"), p.path),
+            Token::Subsection(s, i) => format!("{} {} {} {}", bold("Subsection Command:"), &content[s.start .. s.end], bold("Indent:"), i.count),
+            Token::Error(s, e) => format!("{} {} {} {:?}", bold("Error Command:"), &content[s.start .. s.end], bold("Error Type:"), e),
+        });
+    }
+}
+
+fn bold(txt: &str) -> String{
+    return format!("\x1B[47m\x1B[30m{}\x1B[0m", txt);
 }

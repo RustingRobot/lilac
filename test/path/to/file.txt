@@ -1,10 +1,10 @@
 The sun is a mass of incandescent gas, a gigantic nuclear furnace.
 
-= subsection
+:subsection
 Where hydrogen is built into helium at a temperature of millions of degrees.
 Yo-ho, it's hot, the sun is not a place where we could live.
 
-= sub
+:sub
 This should not be included when filtering for subsection!
-== subsection
+::subsection
 But here on Earth, there'd be no life without the light it gives.
