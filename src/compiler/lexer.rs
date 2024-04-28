@@ -5,7 +5,7 @@ use crate::{exit::{err_exit, err_list}, settings};
 
 use super::{parser, Span};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct LilacPath{pub path: String, pub marker: char}
 
 impl LilacPath {
@@ -42,20 +42,20 @@ impl LilacPath {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Iterator{pub iterator: String}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Indent{pub count: usize}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ErrType{
     EmptyCmd,
     InvalidCmd,
     WrongArgCount
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token{
     Block(Span),
     Command(Span),
@@ -88,6 +88,8 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
         tokens.push(Token::Block(Span {start: last_block, end: content.len()}))
     }
 
+    let mut for_counter = 0;
+
     //turn command tokens into more specific tokens
     for t in &mut tokens {
         match t {
@@ -110,10 +112,12 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
                     }
                     "for" => {
                         if cmd_parts.len() != 4 { Token::Error(*span, ErrType::WrongArgCount) } else {
+                            for_counter += 1;
                             Token::For(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker}, Iterator{ iterator: cmd_parts[3].to_owned()})
                         }
                     }
                     "end" => {
+                        for_counter -= 1;
                         Token::End(*span)
                     }
                     "run" => { if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
@@ -150,6 +154,13 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
             _ => {}
         }
     }
+
+    if for_counter > 0 {
+        errors.push("Did not close all loops!".to_owned())
+    } else if for_counter < 0 {
+        errors.push("Tried to close more loops than were open!".to_owned())
+    }
+
     if !errors.is_empty() {
         err_list(errors);
     }
@@ -186,24 +197,4 @@ pub fn extract_subsections(content: &str) -> Vec<Token>{
     }
 
     tokens
-}
-
-pub fn visualize_tokens(tokens: Vec<Token>, content: &str){
-    for token in tokens{
-        println!("{}",
-        match token{
-            Token::Block(s) => format!("{} {}", bold("Block:"), &content[s.start .. s.end]),
-            Token::Command(s) => format!("{} {}", bold("Command:"), &content[s.start .. s.end]),
-            Token::Put(s, p) => format!("{} {} {} {}", bold("Put Command:"), &content[s.start .. s.end], bold("Path:"), p.path),
-            Token::For(s, p, i) => format!("{} {} {} {} {} {}", bold("For Command:"), &content[s.start .. s.end], bold("Path:"), p.path, bold("Iterator:"), i.iterator),
-            Token::End(s) => format!("{} {}", bold("End Command:"), &content[s.start .. s.end]),
-            Token::Run(s, p) => format!("{} {} {} {}", bold("Run Command:"), &content[s.start .. s.end], bold("Path:"), p.path),
-            Token::Subsection(s, i) => format!("{} {} {} {}", bold("Subsection Command:"), &content[s.start .. s.end], bold("Indent:"), i.count),
-            Token::Error(s, e) => format!("{} {} {} {:?}", bold("Error Command:"), &content[s.start .. s.end], bold("Error Type:"), e),
-        });
-    }
-}
-
-fn bold(txt: &str) -> String{
-    return format!("\x1B[47m\x1B[30m{}\x1B[0m", txt);
 }

@@ -6,6 +6,7 @@ use self::lexer::{Indent, Token};
 
 pub mod lexer;
 pub mod parser;
+pub mod visualize;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Span{
@@ -59,10 +60,6 @@ impl<'a> SubsectionNode<'a> {
                 None => err_exit(&format!("subsection does not exist: {:?}", path)),
             }
         }
-    }
-
-    pub fn visualize(&self){
-        self.visualize_layer(0);
     }
 
     fn visualize_layer(&self, level: usize) {
