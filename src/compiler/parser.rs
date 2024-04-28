@@ -1,6 +1,8 @@
+use std::{collections::HashMap, fs};
+
 use crate::{compiler::Span, exit::err_exit};
 
-use super::{lexer::Token, SubsectionNode, TokenNode};
+use super::{lexer::{Iterator, LilacPath, Token}, SubsectionNode, TokenNode};
 
 pub fn build_subsection_tree<'a>(content: &'a str, mut tokens: Vec<Token>, file: &str) -> SubsectionNode<'a>{    
     let mut root_node = SubsectionNode{ name: "root", ..Default::default()};
@@ -51,6 +53,36 @@ fn build_ast_layer(tokens: &[Token], mut index: usize) -> (Vec<TokenNode>, usize
 }
 
 
-pub fn parse_syntax_tree(rootNode: TokenNode){
+pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap<String, String>) -> String{
+    let mut file_contents = String::new();
+    for node in nodes {
+        let temp_str: String;
+        file_contents.push_str(match &node.content {
+            Token::Block(s) => &content[s.start .. s.end],
+            Token::Put(_, _) => {temp_str = parse_put(&node.content); &temp_str},
+            Token::For(_, l, i) => {temp_str = parse_for(l, i.clone(), &node.children, &content, ctx.clone()); &temp_str},
+            Token::Run(_, _) => {temp_str = parse_run(&node.content); &temp_str},
+            _ => err_exit(&format!("invalid token in parsing stage: {:?}", node)),
+        })
+    };
+    file_contents
+}
 
+fn parse_for(path: &LilacPath, iterator: Iterator, children: &Vec<TokenNode>, content: &String, mut ctx: HashMap<String, String>) -> String{
+    let mut build_string = String::new();
+    // get all files / subsections that need to be iterated over
+    let loop_elements = vec![];
+    for element in loop_elements {
+        ctx.insert(iterator.iterator.clone(), element);
+        build_string.push_str(&parse_syntax_tree(&children, content, &ctx));
+    }
+    build_string
+}
+
+fn parse_put(token: &Token) -> String{
+    todo!()
+}
+
+fn parse_run(token: &Token) -> String{
+    todo!()
 }
