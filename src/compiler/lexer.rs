@@ -27,17 +27,26 @@ impl LilacPath {
         return self.path.contains("{");
     }
 
-    fn directory(&self) -> &str {
+    pub fn directory(&self) -> &str {
         match self.path.split_once(self.marker) {
             Some((dir, _)) => dir,
             None => &self.path
         }
     }
 
-    fn subsection(&self) -> &str {
+    pub fn subsection(&self) -> &str {
         match self.path.split_once(self.marker) {
             Some((_, sub)) => sub,
             None => ""
+        }
+    }
+
+    pub fn sub_list(&self) -> Vec<&str>{
+        let sub = self.subsection();
+        if sub == "" {
+            vec![]
+        } else {
+            sub.split(self.marker).collect()
         }
     }
 }

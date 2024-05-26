@@ -32,7 +32,7 @@ impl<'a> SubsectionNode<'a> {
         } else {
             self.children.push(
                 SubsectionNode { 
-                name: &content[(s_info.0.start + usize::from(s_info.1.count))..s_info.0.end], 
+                name: &content[(s_info.0.start + usize::from(s_info.1.count))..s_info.0.end].trim(), 
                 content: block_text, 
                 children: vec![] 
             });
@@ -51,12 +51,23 @@ impl<'a> SubsectionNode<'a> {
         }
     }
 
-    pub fn get(&self, path: &[&str]) -> &str {
+    pub fn get_content(&self, mut path: Vec<&str>) -> &str {
         if path.is_empty() {
             self.content
         } else {
             match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
-                Some(c) => c.get(&path[1..]),
+                Some(c) => c.get_content(path.drain(1..).collect()),
+                None => err_exit(&format!("subsection does not exist: {:?}", path)),
+            }
+        }
+    }
+
+    pub fn get_children(&self, mut path: Vec<&str>) -> Vec<String> {
+        if path.is_empty() {
+            self.children.iter().map(|child| child.name.to_owned()).collect()
+        } else {
+            match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
+                Some(c) => c.get_children(path.drain(1..).collect()),
                 None => err_exit(&format!("subsection does not exist: {:?}", path)),
             }
         }

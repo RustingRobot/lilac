@@ -1,8 +1,8 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs::{self, File}, path::Path};
 
-use crate::{compiler::Span, exit::err_exit};
+use crate::exit::{err_exit, Try};
 
-use super::{lexer::{Iterator, LilacPath, Token}, SubsectionNode, TokenNode};
+use super::{lexer::{self, Iterator, LilacPath, Token}, SubsectionNode, TokenNode};
 
 pub fn build_subsection_tree<'a>(content: &'a str, mut tokens: Vec<Token>, file: &str) -> SubsectionNode<'a>{    
     let mut root_node = SubsectionNode{ name: "root", ..Default::default()};
@@ -70,7 +70,22 @@ pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap
 
 fn parse_for(path: &LilacPath, iterator: Iterator, children: &Vec<TokenNode>, content: &String, mut ctx: HashMap<String, String>) -> String{
     let mut build_string = String::new();
+    let dir = path.directory();
     // get all files / subsections that need to be iterated over
+    let mut loop_elements: Vec<String> = vec![];
+    
+    if Path::new(&dir).is_file() {
+        let mut file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
+        let tokens = lexer::extract_subsections(&file);
+        let tree = build_subsection_tree(&file, tokens, dir);
+        loop_elements.append(&mut tree.get_children(path.sub_list()));
+    } else if Path::new(&dir).is_dir() {
+        let paths = fs::read_dir(dir).err_try(&format!("could not read from path {}", dir));
+        for path in paths{
+            loop_elements.push(path.unwrap().path().display().to_string())
+        }
+    }
+
     let loop_elements = vec![];
     for element in loop_elements {
         ctx.insert(iterator.iterator.clone(), element);

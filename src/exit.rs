@@ -20,3 +20,16 @@ fn err(message: String) -> ! {
     }
     process::exit(1);
 }
+
+pub trait Try<T> {
+    fn err_try(self, msg: &str) -> T;
+}
+
+impl<T, E> Try<T> for Result<T, E> {
+    fn err_try(self, msg: &str) -> T {
+        match self {
+            Ok(t) => t,
+            Err(_) => err_exit(msg),
+        }
+    }
+}

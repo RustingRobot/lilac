@@ -3,20 +3,34 @@ use walkdir::WalkDir;
 use regex::Regex;
 use regex::escape;
 use crate::compiler::lexer;
+use crate::compiler::lexer::LilacPath;
 use crate::compiler::parser;
+use crate::compiler::parser::build_subsection_tree;
 use crate::compiler::visualize::visualize_ast;
 use crate::compiler::visualize::visualize_tokens;
+use crate::compiler::visualize::Visualize;
 use crate::exit::err_exit;
+use crate::exit::Try;
 use crate::settings;
 
 
 pub fn build(){
-    let content = fs::read_to_string("test_text.txt").expect("Should have been able to read the file");
+    let path: LilacPath = LilacPath {path: "test_subsec.txt:1:name".to_owned(), marker: ':'};
+    let dir = path.directory();
+    let mut elem: Vec<String> = vec![];
+    
+    let mut file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
+    let tokens = lexer::extract_subsections(&file);
+    let tree = build_subsection_tree(&file, tokens, dir);
+    elem.append(&mut tree.get_children(path.sub_list()));
+    
+    print!("{:?}", elem);
+/*     let content = fs::read_to_string("test_text.txt").err_try("Should have been able to read the file");
 
     let tree = lexer::extract_commands(&content);
     visualize_tokens(&tree, &content);
     let ast = parser::build_syntax_tree(&tree);
-    visualize_ast(&ast);
+    visualize_ast(&ast); */
     return;
 
     if !Path::new("./_lilac").exists(){
