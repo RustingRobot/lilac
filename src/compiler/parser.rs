@@ -59,7 +59,7 @@ pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap
         let temp_str: String;
         file_contents.push_str(match &node.content {
             Token::Block(s) => &content[s.start .. s.end],
-            Token::Put(_, l) => {temp_str = parse_put(l); &temp_str},
+            Token::Put(_, l) => {temp_str = parse_put(l, &ctx); &temp_str},
             Token::For(_, l, i) => {temp_str = parse_for(l, i.clone(), &node.children, &content, ctx.clone()); &temp_str},
             Token::Run(_, _) => {temp_str = parse_run(&node.content); &temp_str},
             _ => err_exit(&format!("invalid token in parsing stage: {:?}", node)),
@@ -100,7 +100,7 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
         path.check_path();
         todo!()
     }
-    return fs::read_to_string(path.path).err_try(&format!("could not read file {}", path.path));
+    return fs::read_to_string(path.path.clone()).err_try(&format!("could not read file {}", path.path));
 }
 
 fn parse_run(token: &Token) -> String{
