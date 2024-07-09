@@ -9,7 +9,7 @@ use super::{parser, Span};
 pub struct LilacPath{pub path: String, pub marker: char}
 
 impl LilacPath {
-    fn check_path(&self) -> bool{
+    pub fn check_path(&self) -> bool{
         let dir = self.directory();
         let sub = self.subsection();
 
@@ -23,7 +23,7 @@ impl LilacPath {
         true
     }
 
-    fn contains_var(&self) -> bool{
+    pub fn contains_var(&self) -> bool{
         return self.path.contains("{");
     }
 
