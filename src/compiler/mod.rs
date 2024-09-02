@@ -53,7 +53,20 @@ impl<'a> SubsectionNode<'a> {
 
     pub fn get_content(&self, mut path: Vec<&str>) -> &str {
         if path.is_empty() {
-            self.content
+            let mut trimmed = self.content;
+
+            if trimmed.starts_with("\r\n") {
+                trimmed = &trimmed[2..];
+            } else if trimmed.starts_with('\n') {
+                trimmed = &trimmed[1..];
+            }
+
+            if trimmed.ends_with("\r\n") {
+                trimmed = &trimmed[..trimmed.len() - 2];
+            } else if trimmed.ends_with('\n') {
+                trimmed = &trimmed[..trimmed.len() - 1];
+            }
+            trimmed
         } else {
             match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
                 Some(c) => c.get_content(path.drain(1..).collect()),

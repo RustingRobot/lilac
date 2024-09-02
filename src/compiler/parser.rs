@@ -100,7 +100,16 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
         path.check_path();
         todo!()
     }
-    return fs::read_to_string(path.path.clone()).err_try(&format!("could not read file {}", path.path));
+
+    let file = fs::read_to_string(path.directory()).err_try(&format!("could not read file {}", path.path));
+
+    if path.contains_subsection() {
+        let tokens = lexer::extract_subsections(&file);
+        let tree = build_subsection_tree(&file, tokens, &path.path);
+        tree.get_content(path.sub_list()).to_owned()
+    }else{
+        file
+    }
 }
 
 fn parse_run(token: &Token) -> String{

@@ -24,7 +24,11 @@ impl LilacPath {
     }
 
     pub fn contains_var(&self) -> bool{
-        return self.path.contains("{");
+        self.path.contains("{")
+    }
+
+    pub fn contains_subsection(&self) -> bool{
+        self.subsection().ne("")
     }
 
     pub fn directory(&self) -> &str {

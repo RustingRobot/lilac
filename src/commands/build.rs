@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::{fs, fs::File, path::Path};
 use walkdir::WalkDir;
 use regex::Regex;
@@ -6,6 +7,8 @@ use crate::compiler::lexer;
 use crate::compiler::lexer::LilacPath;
 use crate::compiler::parser;
 use crate::compiler::parser::build_subsection_tree;
+use crate::compiler::parser::build_syntax_tree;
+use crate::compiler::parser::parse_syntax_tree;
 use crate::compiler::visualize::visualize_ast;
 use crate::compiler::visualize::visualize_tokens;
 use crate::compiler::visualize::Visualize;
@@ -15,16 +18,12 @@ use crate::settings;
 
 
 pub fn build(){
-    let path: LilacPath = LilacPath {path: "test_subsec.txt:1:name".to_owned(), marker: ':'};
+    let path: LilacPath = LilacPath {path: "test_simple.txt".to_owned(), marker: ':'};
     let dir = path.directory();
-    let mut elem: Vec<String> = vec![];
-    
-    let mut file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
-    let tokens = lexer::extract_subsections(&file);
-    let tree = build_subsection_tree(&file, tokens, dir);
-    elem.append(&mut tree.get_children(path.sub_list()));
-    
-    print!("{:?}", elem);
+    let file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
+    let tokens = lexer::extract_commands(&file);
+    let tree = build_syntax_tree(&tokens);
+    print!("{}",parse_syntax_tree(&tree, &file, &HashMap::new()));
 /*     let content = fs::read_to_string("test_text.txt").err_try("Should have been able to read the file");
 
     let tree = lexer::extract_commands(&content);
