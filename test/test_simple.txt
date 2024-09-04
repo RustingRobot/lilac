@@ -1,1 +1,1 @@
-hello [[put path/to/file.txt:sub:subsection]] bye
+hello [[run scripts/printSomething.sh]] bye
