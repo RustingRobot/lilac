@@ -1,1 +1,6 @@
-hello [[run scripts/printSomething.sh]] bye
+start of file 
+[[for path/to/files as file]]
+new loop 
+[[put {file}:4]]
+[[end]]
+end of file
