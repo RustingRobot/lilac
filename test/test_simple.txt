@@ -1,6 +1,8 @@
 start of file 
 [[for path/to/files as file]]
 new loop 
-[[put {file}:4]]
+[[for path/to/files as subsec]]
+[[put {subsec}]]
+[[end]]
 [[end]]
 end of file
