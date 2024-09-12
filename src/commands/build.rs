@@ -1,37 +1,18 @@
 use std::collections::HashMap;
+use std::io::Write;
 use std::{fs, fs::File, path::Path};
 use walkdir::WalkDir;
 use regex::Regex;
 use regex::escape;
 use crate::compiler::lexer;
-use crate::compiler::lexer::LilacPath;
-use crate::compiler::parser;
-use crate::compiler::parser::build_subsection_tree;
 use crate::compiler::parser::build_syntax_tree;
 use crate::compiler::parser::parse_syntax_tree;
-use crate::compiler::visualize::visualize_ast;
-use crate::compiler::visualize::visualize_tokens;
-use crate::compiler::visualize::Visualize;
 use crate::exit::err_exit;
 use crate::exit::Try;
 use crate::settings;
 
 
 pub fn build(){
-    let path: LilacPath = LilacPath {path: "test_simple.txt".to_owned(), marker: ':'};
-    let dir = path.directory();
-    let file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
-    let tokens = lexer::extract_commands(&file);
-    let tree = build_syntax_tree(&tokens);
-    print!("{}",parse_syntax_tree(&tree, &file, &HashMap::new()));
-/*     let content = fs::read_to_string("test_text.txt").err_try("Should have been able to read the file");
-
-    let tree = lexer::extract_commands(&content);
-    visualize_tokens(&tree, &content);
-    let ast = parser::build_syntax_tree(&tree);
-    visualize_ast(&ast); */
-    return;
-
     if !Path::new("./_lilac").exists(){
         err_exit("This path does not contain a _lilac directory!");
     }
@@ -63,7 +44,7 @@ pub fn build(){
         }else{
             let file_content = match fs::read_to_string(original_path) {
                 Err(_) => {
-                    println!("skipping {}", original_path.to_string_lossy());
+                    println!("\u{1b}[33;1mwarning\u{1b}[0m skipping file: {}", original_path.to_string_lossy());
                     "".to_owned()
                 },
                 Ok(r) => r
@@ -77,10 +58,16 @@ pub fn build(){
             }
         }
     }
+
+    println!("\u{1b}[32;1mdone!\u{1b}[0m");
 }
 
 fn process_file(path: &Path, content: String){
-    print!("in {:?} ", path);
-    File::create(path).unwrap();
-    lexer::extract_commands(&content);
+    println!("\u{1b}[34;1minfo\u{1b}[0m processing file: {}", path.to_string_lossy());
+    let mut f = File::create(path).unwrap();
+
+    let tokens = lexer::extract_commands(&content);
+    let tree = build_syntax_tree(&tokens);
+    let new_contents = parse_syntax_tree(&tree, &content, &HashMap::new());
+    f.write_all(new_contents.as_bytes()).err_try(&format!("could not write to file: {}", path.to_string_lossy()));
 }

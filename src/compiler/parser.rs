@@ -1,4 +1,6 @@
-use std::{collections::HashMap, fs::{self, File}, path::Path};
+use std::{collections::HashMap, fs::{self}, path::Path};
+
+use std::process::Command;
 
 use crate::exit::{err_exit, Try};
 
@@ -61,7 +63,7 @@ pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap
             Token::Block(s) => &content[s.start .. s.end],
             Token::Put(_, l) => {temp_str = parse_put(l, &ctx); &temp_str},
             Token::For(_, l, i) => {temp_str = parse_for(l, i.clone(), &node.children, &content, ctx.clone()); &temp_str},
-            Token::Run(_, _) => {temp_str = parse_run(&node.content); &temp_str},
+            Token::Run(_, l) => {temp_str = parse_run(l, &ctx); &temp_str},
             _ => err_exit(&format!("invalid token in parsing stage: {:?}", node)),
         })
     };
@@ -69,16 +71,23 @@ pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap
 }
 
 fn parse_for(path: &LilacPath, iterator: Iterator, children: &Vec<TokenNode>, content: &String, mut ctx: HashMap<String, String>) -> String{
+    let mut mod_path = path.clone();
+    if mod_path.contains_var(){
+        mod_path.resolve_vars(&ctx);
+    }
+    
     let mut build_string = String::new();
-    let dir = path.directory();
+    let dir = mod_path.directory();
     // get all files / subsections that need to be iterated over
     let mut loop_elements: Vec<String> = vec![];
     
     if Path::new(&dir).is_file() {
-        let mut file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
+        let file = fs::read_to_string(&dir).err_try(&format!("could not read file {}", dir));
         let tokens = lexer::extract_subsections(&file);
         let tree = build_subsection_tree(&file, tokens, dir);
-        loop_elements.append(&mut tree.get_children(path.sub_list()));
+        let mut children = tree.get_children(mod_path.sub_list(), mod_path.directory());
+        //let mut child_paths: Vec<String> = children.iter().map(|s| format!("{}:{}", dir, s)).collect();
+        loop_elements.append(&mut children);
     } else if Path::new(&dir).is_dir() {
         let paths = fs::read_dir(dir).err_try(&format!("could not read from path {}", dir));
         for path in paths{
@@ -86,32 +95,41 @@ fn parse_for(path: &LilacPath, iterator: Iterator, children: &Vec<TokenNode>, co
         }
     }
 
-    let loop_elements = vec![];
+    //let loop_elements = vec![];
     for element in loop_elements {
         ctx.insert(iterator.iterator.clone(), element);
-        build_string.push_str(&parse_syntax_tree(&children, content, &ctx));
+        build_string.push_str(&parse_syntax_tree(&children, content, &ctx).trim_start());
     }
-    build_string
+    build_string.trim_end().to_owned()
 }
 
 fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
-    if path.contains_var(){
-        // replace vars from ctx
-        path.check_path();
-        todo!()
+    let mut mod_path = path.clone();
+    if mod_path.contains_var(){
+        mod_path.resolve_vars(ctx);
     }
 
-    let file = fs::read_to_string(path.directory()).err_try(&format!("could not read file {}", path.path));
+    let file = fs::read_to_string(mod_path.directory()).err_try(&format!("could not read file {}", mod_path.path));
 
-    if path.contains_subsection() {
+    if mod_path.contains_subsection() {
         let tokens = lexer::extract_subsections(&file);
-        let tree = build_subsection_tree(&file, tokens, &path.path);
-        tree.get_content(path.sub_list()).to_owned()
+        let tree = build_subsection_tree(&file, tokens, &mod_path.path);
+        tree.get_content(mod_path.sub_list(), mod_path.directory()).to_owned()
     }else{
         file
     }
 }
 
-fn parse_run(token: &Token) -> String{
-    todo!()
+fn parse_run(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
+    let mut mod_path = path.clone();
+    if mod_path.contains_var(){
+        mod_path.resolve_vars(ctx);
+    }
+
+    match Path::new(&mod_path.path).extension().unwrap().to_str(){
+        Some("sh") => {
+            String::from_utf8_lossy(&Command::new("sh").arg(mod_path.path.clone()).output().err_try("could not launch shell").stdout).trim().to_string()
+        },
+        _ => err_exit(&format!("file-extension is not supported as an executable ({})", mod_path.path))
+    }
 }

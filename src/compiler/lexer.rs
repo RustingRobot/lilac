@@ -1,9 +1,9 @@
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use regex::{escape, Regex, RegexBuilder};
 use crate::{exit::{err_exit, err_list}, settings};
 
-use super::{parser, Span};
+use super::Span;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct LilacPath{pub path: String, pub marker: char}
@@ -51,6 +51,12 @@ impl LilacPath {
             vec![]
         } else {
             sub.split(self.marker).collect()
+        }
+    }
+
+    pub fn resolve_vars(&mut self, ctx: &HashMap<String, String>){
+        for (key, value) in ctx {
+            self.path = self.path.replace(&format!("{{{}}}",key), value);
         }
     }
 }

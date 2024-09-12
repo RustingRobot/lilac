@@ -1,8 +1,0 @@
-start of file 
-[[for path/to/files as file]]
-new loop 
-[[for path/to/files as subsec]]
-[[put {subsec}]]
-[[end]]
-[[end]]
-end of file

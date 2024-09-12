@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use super::{lexer::Token, SubsectionNode, TokenNode};
 
 pub trait Visualize {

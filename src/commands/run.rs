@@ -6,6 +6,17 @@ use notify_debouncer_mini::new_debouncer;
 
 use crate::{exit::err_exit, settings::{self, Settings}};
 
+const INJECT: &str = r#"
+<script>
+    alert("sdfsd");
+    const socket = new WebSocket("ws://localhost:8765");
+    socket.addEventListener("message", (event) => {
+        console.log("Message from server ", event.data);
+        alert("msg received");
+    });      
+</script>
+"#;
+
 pub fn run(){
     let settings = settings::request_settings();
 
@@ -44,10 +55,12 @@ fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     }};
 
     //serve file if it exists. If not send 404
-    let contents = match fs::read(format!("_lilac/build{path}")){
+    let mut contents = match fs::read(format!("_lilac/build{path}")){
         Err(_) => "[404] file does not exist :(".as_bytes().to_vec(),
         Ok(r) => {status_line = "HTTP/1.1 200 OK"; r}
     };
+
+    contents.append(&mut INJECT.as_bytes().to_owned());
 
     let length = contents.len();
     

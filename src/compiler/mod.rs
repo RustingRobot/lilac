@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use crate::exit::err_exit;
 
 use self::lexer::{Indent, Token};
@@ -51,37 +49,24 @@ impl<'a> SubsectionNode<'a> {
         }
     }
 
-    pub fn get_content(&self, mut path: Vec<&str>) -> &str {
+    pub fn get_content(&self, mut path: Vec<&str>, file: &str) -> &str {
         if path.is_empty() {
-            let mut trimmed = self.content;
-
-            if trimmed.starts_with("\r\n") {
-                trimmed = &trimmed[2..];
-            } else if trimmed.starts_with('\n') {
-                trimmed = &trimmed[1..];
-            }
-
-            if trimmed.ends_with("\r\n") {
-                trimmed = &trimmed[..trimmed.len() - 2];
-            } else if trimmed.ends_with('\n') {
-                trimmed = &trimmed[..trimmed.len() - 1];
-            }
-            trimmed
+            self.content.trim()
         } else {
             match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
-                Some(c) => c.get_content(path.drain(1..).collect()),
-                None => err_exit(&format!("subsection does not exist: {:?}", path)),
+                Some(c) => c.get_content(path.drain(1..).collect(), file),
+                None => err_exit(&format!("subsection does not exist: {:?} in file: {}", path, file)),
             }
         }
     }
 
-    pub fn get_children(&self, mut path: Vec<&str>) -> Vec<String> {
+    pub fn get_children(&self, mut path: Vec<&str>, file: &str) -> Vec<String> {
         if path.is_empty() {
-            self.children.iter().map(|child| child.name.to_owned()).collect()
+            self.children.iter().map(|child| format!("{}:{}", file, child.name).to_owned()).collect()
         } else {
             match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
-                Some(c) => c.get_children(path.drain(1..).collect()),
-                None => err_exit(&format!("subsection does not exist: {:?}", path)),
+                Some(c) => c.get_children(path.drain(1..).collect(), &format!("{}:{}",file,c.name)),
+                None => err_exit(&format!("subsection does not exist: {:?} in file: {}", path, file)),
             }
         }
     }
