@@ -1,18 +1,22 @@
+use core::time;
 use std::{
-    fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, path::Path, sync::mpsc, time::Duration, thread
+    cmp::Reverse, fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, path::Path, sync::mpsc, thread, time::Duration
 };
 use notify::RecursiveMode;
-use notify_debouncer_mini::new_debouncer;
+use notify_debouncer_mini::{new_debouncer, DebouncedEventKind};
+
+use tungstenite::{accept, handshake::server::{Request, Response}};
+
+use crossbeam_channel::{unbounded, Receiver, Sender};
 
 use crate::{exit::err_exit, settings::{self, Settings}};
 
 const INJECT: &str = r#"
 <script>
-    alert("sdfsd");
-    const socket = new WebSocket("ws://localhost:8765");
+    const socket = new WebSocket("ws://localhost:8081");
     socket.addEventListener("message", (event) => {
-        console.log("Message from server ", event.data);
-        alert("msg received");
+        alert("test");
+        location.reload();
     });      
 </script>
 "#;
@@ -27,7 +31,9 @@ pub fn run(){
         Ok(r) => r
     };
 
-    thread::spawn(|| start_watcher());
+    let (tx, rx) = unbounded();
+    thread::spawn(move || start_watcher(tx));
+    thread::spawn(move || start_ws_server(rx));
 
     println!("\nlocalhost server is online!");
     println!("http://localhost:{}/", settings.webserver_port);
@@ -42,7 +48,6 @@ pub fn run(){
 fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     let buf_reader = BufReader::new(&mut stream);
     let request_line = buf_reader.lines().next().unwrap().unwrap();
-
     let mut status_line = "HTTP/1.1 404 NOT FOUND";
 
     //determine, what file the requester actually wants
@@ -68,7 +73,7 @@ fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     stream.write_all(&[response.as_bytes(), &contents].concat()).unwrap();
 }
 
-fn start_watcher(){
+fn start_watcher(sender: Sender<bool>){
     let (tx, rx) = mpsc::channel();
     let mut debouncer = new_debouncer(Duration::from_secs(1), tx).unwrap();
 
@@ -77,13 +82,37 @@ fn start_watcher(){
         .watch(Path::new("."), RecursiveMode::Recursive)
         .unwrap();
 
-    // print all events, non returning
+    debouncer.watcher().unwatch(Path::new("./_lilac")).unwrap();
+
     for result in rx {
         match result {
             Ok(events) => events
                 .iter()
-                .for_each(|event| println!("Event {event:?}")),
+                .for_each(|event| {
+                    if event.kind == DebouncedEventKind::Any {
+                        println!("sending update");
+                        sender.send(true).unwrap();
+                    }
+                }),
             Err(error) => println!("Error {error:?}"),
         }
+    }
+}
+
+fn start_ws_server(receiver: Receiver<bool>){
+    let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
+    for stream in listener.incoming() {
+        let new_receiver = receiver.clone();
+        thread::spawn(move || {
+        let mut websocket = accept(stream.unwrap()).unwrap();
+        for _ in new_receiver{
+            super::build::build();
+            println!("sending websoket msg");
+            if let Err(_) = websocket.send("test".into()){
+                println!("return");
+                break;
+            }
+        }
+    });
     }
 }
