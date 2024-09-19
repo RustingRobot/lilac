@@ -2,6 +2,7 @@ mod commands;
 mod settings;
 mod compiler;
 mod exit;
+mod broadcaster;
 
 use clap::Parser;
 use commands::*;
@@ -31,7 +32,7 @@ fn main() {
             }
         },
         Clean =>{
-            print!("NO")
+            println!("\u{1b}[31;1m\noops, something went wrong :(\n\u{1b}[0m")
         },
         Build =>{
             build::build()

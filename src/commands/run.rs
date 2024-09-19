@@ -1,21 +1,18 @@
-use core::time;
 use std::{
-    cmp::Reverse, fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, path::Path, sync::mpsc, thread, time::Duration
+    fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, path::Path, sync::{mpsc, Arc, Mutex}, thread, time::Duration
 };
+
 use notify::RecursiveMode;
 use notify_debouncer_mini::{new_debouncer, DebouncedEventKind};
 
-use tungstenite::{accept, handshake::server::{Request, Response}};
+use tungstenite::accept;
 
-use crossbeam_channel::{unbounded, Receiver, Sender};
-
-use crate::{exit::err_exit, settings::{self, Settings}};
+use crate::{broadcaster::UnboundedBroadcast, exit::err_exit, settings::{self, Settings}};
 
 const INJECT: &str = r#"
 <script>
     const socket = new WebSocket("ws://localhost:8081");
     socket.addEventListener("message", (event) => {
-        alert("test");
         location.reload();
     });      
 </script>
@@ -31,13 +28,15 @@ pub fn run(){
         Ok(r) => r
     };
 
-    let (tx, rx) = unbounded();
-    thread::spawn(move || start_watcher(tx));
-    thread::spawn(move || start_ws_server(rx));
+    //let (tx, rx) = unbounded();
+    let write = Arc::new(Mutex::new(UnboundedBroadcast::new()));
+    let read = write.clone();
+    thread::spawn(|| start_watcher(write));
+    thread::spawn(|| start_ws_server(read));
 
     println!("\nlocalhost server is online!");
-    println!("http://localhost:{}/", settings.webserver_port);
-    println!("\nPress Ctrl + C to quit...");
+    println!("\u{1b}[34;1mhttp://localhost:{}/\u{1b}[0m", settings.webserver_port);
+    println!("\nPress Ctrl + C to quit...\n");
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
@@ -73,7 +72,7 @@ fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     stream.write_all(&[response.as_bytes(), &contents].concat()).unwrap();
 }
 
-fn start_watcher(sender: Sender<bool>){
+fn start_watcher(broadcaster: Arc<Mutex<UnboundedBroadcast<bool>>>){
     let (tx, rx) = mpsc::channel();
     let mut debouncer = new_debouncer(Duration::from_secs(1), tx).unwrap();
 
@@ -90,8 +89,8 @@ fn start_watcher(sender: Sender<bool>){
                 .iter()
                 .for_each(|event| {
                     if event.kind == DebouncedEventKind::Any {
-                        println!("sending update");
-                        sender.send(true).unwrap();
+                        let shared = broadcaster.lock().unwrap();
+                        shared.send(true).unwrap();
                     }
                 }),
             Err(error) => println!("Error {error:?}"),
@@ -99,18 +98,23 @@ fn start_watcher(sender: Sender<bool>){
     }
 }
 
-fn start_ws_server(receiver: Receiver<bool>){
+fn start_ws_server(broadcaster: Arc<Mutex<UnboundedBroadcast<bool>>>){
     let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
     for stream in listener.incoming() {
-        let new_receiver = receiver.clone();
+        let mut shared = broadcaster.lock().unwrap();
+        let new_receiver = shared.subscribe();
         thread::spawn(move || {
         let mut websocket = accept(stream.unwrap()).unwrap();
         for _ in new_receiver{
-            super::build::build();
-            println!("sending websoket msg");
-            if let Err(_) = websocket.send("test".into()){
-                println!("return");
-                break;
+            println!("\u{1b}[34;1m----- building website -----\u{1b}[0m");
+            let build = thread::spawn(|| super::build::build());
+            if let Ok(_) = build.join(){
+                if let Err(_) = websocket.send("test".into()){
+                    println!("return");
+                    return;
+                }
+            }else{
+                println!("\u{1b}[31;1m\noops, something went wrong :(\n\u{1b}[0m")
             }
         }
     });

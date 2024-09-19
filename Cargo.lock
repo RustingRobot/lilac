@@ -344,7 +344,6 @@ name = "lilac"
 version = "0.1.0"
 dependencies = [
  "clap",
- "crossbeam-channel",
  "notify",
  "notify-debouncer-mini",
  "regex",

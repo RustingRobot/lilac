@@ -1,4 +1,4 @@
-use std::process;
+use std::{panic, process};
 
 pub fn err_exit(message: &str) -> ! {
     let message = message.replace("\n", "\n      "); // indent new line
@@ -14,10 +14,12 @@ pub fn err_list(messages: Vec<String>) -> ! {
     err(messages.concat())
 }
 
-fn err(message: String) -> ! {
+fn err(message: String) -> !{
     if cfg!(test){
         panic!("{}", message)
     }
+    panic::set_hook(Box::new(|_info| {}));
+    panic!("{}", message);
     process::exit(1);
 }
 

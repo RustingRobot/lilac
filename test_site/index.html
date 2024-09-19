@@ -5,9 +5,12 @@
     <title>Hello!</title>
   </head>
   <body>
-    <h1>My co Page ds</h1>
+    <h1>My Page</h1>
     <p>this is a clickable test image:</p>
-    <p>[[put path/to/files/1.txt]]</p>
+    [[for path/to/files as file]]
+      <p>[[put {file}]]</p>
+    [[end]]
+    <p>[[run scripts/printSomething.sh]]</p>
     <a href="test.html"><img src="images/smile.png"></a>
   </body>
 </html>
