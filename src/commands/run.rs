@@ -59,12 +59,10 @@ fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     }};
 
     //serve file if it exists. If not send 404
-    let mut contents = match fs::read(format!("_lilac/build{path}")){
+    let contents = match fs::read(format!("_lilac/build{path}")){
         Err(_) => "[404] file does not exist :(".as_bytes().to_vec(),
-        Ok(r) => {status_line = "HTTP/1.1 200 OK"; r}
+        Ok(mut r) => {status_line = "HTTP/1.1 200 OK"; r.append(&mut INJECT.as_bytes().to_owned()); r}
     };
-
-    contents.append(&mut INJECT.as_bytes().to_owned());
 
     let length = contents.len();
     
@@ -110,7 +108,6 @@ fn start_ws_server(broadcaster: Arc<Mutex<UnboundedBroadcast<bool>>>){
             let build = thread::spawn(|| super::build::build());
             if let Ok(_) = build.join(){
                 if let Err(_) = websocket.send("test".into()){
-                    println!("return");
                     return;
                 }
             }else{

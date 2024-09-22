@@ -49,12 +49,19 @@ impl<'a> SubsectionNode<'a> {
         }
     }
 
-    pub fn get_content(&self, mut path: Vec<&str>, file: &str) -> &str {
+    pub fn get_content(&self, mut path: Vec<&str>, file: &str, opt_index: Option<usize>, get_name: bool) -> &str {
         if path.is_empty() {
-            self.content.trim()
+            match opt_index {
+                Some(i) =>
+                    match self.children.iter().nth(i){
+                        Some(n) => if get_name {n.name} else {n.content.trim()},
+                        None => err_exit(&format!("index out of bound: {}", i))
+                    },
+                None =>if get_name {self.name} else {self.content.trim()}
+            }
         } else {
             match self.children.iter().find_map(|c| {if c.name == path[0] {Some(c)} else {None}}) {
-                Some(c) => c.get_content(path.drain(1..).collect(), file),
+                Some(c) => c.get_content(path.drain(1..).collect(), file, opt_index, get_name),
                 None => err_exit(&format!("subsection does not exist: {:?} in file: {}", path, file)),
             }
         }
@@ -148,17 +155,17 @@ mod tests{
         assert_eq!(tokens, 
         vec![
             Block(Span { start: 0, end: 15 }), 
-            Put(Span { start: 15, end: 39 }, LilacPath { path: "path/to/file.txt".into(), marker: settings.subsection_marker }), 
+            Put(Span { start: 15, end: 39 }, LilacPath { path: "path/to/file.txt".into() }), 
             Block(Span { start: 39, end: 54 }), 
-            For(Span { start: 54, end: 83 }, LilacPath { path: "path/to/files".into(), marker: settings.subsection_marker }, lexer::Iterator { iterator: "loop".into() }), 
+            For(Span { start: 54, end: 83 }, LilacPath { path: "path/to/files".into() }, lexer::Iterator { iterator: "loop".into() }), 
             Block(Span { start: 83, end: 98 }), 
             End(Span { start: 98, end: 105 }), 
             Block(Span { start: 105, end: 120 }), 
-            Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into(), marker: settings.subsection_marker }), 
+            Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into() }), 
             Block(Span { start: 153, end: 168 }), 
-            Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into(), marker: settings.subsection_marker }), 
+            Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into() }), 
             Block(Span { start: 203, end: 218 }), 
-            Put(Span { start: 218, end: 257 }, LilacPath { path: "path/to/file.txt:sub:subsection".into(), marker: settings.subsection_marker })]);
+            Put(Span { start: 218, end: 257 }, LilacPath { path: "path/to/file.txt:sub:subsection".into() })]);
     }
 
     #[test]

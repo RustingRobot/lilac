@@ -1,26 +1,48 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, vec};
 
 use regex::{escape, Regex, RegexBuilder};
 use crate::{exit::{err_exit, err_list}, settings};
 
 use super::Span;
 
+
+
 #[derive(Debug, PartialEq, Clone)]
-pub struct LilacPath{pub path: String, pub marker: char}
+pub struct LilacPath{pub path: String}
 
 impl LilacPath {
-    pub fn check_path(&self) -> bool{
+    const SUB_MARKER: char = ':';
+    const MOD_MARKER: char = ';';
+    const POSSIBLE_MODS: [&'static str; 2] = ["", "title"];
+
+    pub fn check_path(&self){
         let dir = self.directory();
         let sub = self.subsection();
 
-        if dir.contains(self.marker) || sub.contains("/") {
+        if dir.contains(Self::SUB_MARKER) || sub.contains("/") {
             err_exit(&format!("invalid path format!\n{}", self.path));
         }
 
         if !Path::new(dir).exists(){
             err_exit(&format!("path or file does not exist!\n{}", self.path))
         }
-        true
+
+        let mut modifiers = self.modifier();
+
+        if modifiers.is_empty() {return;}
+        if modifiers.first().unwrap().parse::<usize>().is_ok(){
+            modifiers.remove(0);
+        }
+
+        modifiers.iter().for_each(
+            |x| {
+                
+                if !Self::POSSIBLE_MODS.contains(x)
+                    { if x.parse::<usize>().is_ok() {
+                        err_exit(&format!("numeric modifier can only be the first modifier: {}\n{}",x , self.path))
+                    } else {err_exit(&format!("unknown modifier: {}\n{}",x , self.path))}}
+            }
+        );
     }
 
     pub fn contains_var(&self) -> bool{
@@ -31,17 +53,37 @@ impl LilacPath {
         self.subsection().ne("")
     }
 
+    pub fn file_name(&self) -> &str{
+        match self.directory().rsplit_once('/') {
+            Some((_,name)) => name,
+            None => ""
+        }
+    }
+
     pub fn directory(&self) -> &str {
-        match self.path.split_once(self.marker) {
+        match self.path.split_once(Self::SUB_MARKER) {
             Some((dir, _)) => dir,
-            None => &self.path
+            None => match self.path.split_once(Self::MOD_MARKER){
+                Some((dir,_)) => dir,
+                None => &self.path,
+            }
         }
     }
 
     pub fn subsection(&self) -> &str {
-        match self.path.split_once(self.marker) {
-            Some((_, sub)) => sub,
+        match self.path.split_once(Self::SUB_MARKER) {
+            Some((_, sub)) => match sub.split_once(Self::MOD_MARKER){
+                Some((sub,_)) => sub,
+                None => sub,
+            },
             None => ""
+        }
+    }
+
+    pub fn modifier(&self) -> Vec<&str> {
+        match self.path.split_once(Self::MOD_MARKER) {
+            Some((_, modi)) => modi.split(Self::MOD_MARKER).collect(),
+            None => vec![]
         }
     }
 
@@ -50,7 +92,7 @@ impl LilacPath {
         if sub == "" {
             vec![]
         } else {
-            sub.split(self.marker).collect()
+            sub.split(Self::SUB_MARKER).collect()
         }
     }
 
@@ -58,6 +100,7 @@ impl LilacPath {
         for (key, value) in ctx {
             self.path = self.path.replace(&format!("{{{}}}",key), value);
         }
+        self.check_path();
     }
 }
 
@@ -126,13 +169,13 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
                 *t = match cmd_parts[0].to_lowercase().as_str() {
                     "put" => {
                         if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker})
+                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned()})
                         }
                     }
                     "for" => {
                         if cmd_parts.len() != 4 { Token::Error(*span, ErrType::WrongArgCount) } else {
                             for_counter += 1;
-                            Token::For(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker}, Iterator{ iterator: cmd_parts[3].to_owned()})
+                            Token::For(*span, LilacPath{ path: cmd_parts[1].to_owned()}, Iterator{ iterator: cmd_parts[3].to_owned()})
                         }
                     }
                     "end" => {
@@ -140,7 +183,7 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
                         Token::End(*span)
                     }
                     "run" => { if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Run(*span, LilacPath{ path: cmd_parts[1].to_owned(), marker: settings.subsection_marker})
+                            Token::Run(*span, LilacPath{ path: cmd_parts[1].to_owned()})
                         }
                     }
                     _ => {

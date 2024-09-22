@@ -110,12 +110,39 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
     }
 
     let file = fs::read_to_string(mod_path.directory()).err_try(&format!("could not read file {}", mod_path.path));
+    let get_title = path.modifier().contains(&"title");
 
     if mod_path.contains_subsection() {
+        
+/*         if path.modifier().contains(&"title"){
+            return match mod_path.sub_list().last(){
+                Some(s) => s.to_string(),
+                None => err_exit(&format!("oops this should not happen! \n (error in path:{})", mod_path.path))
+            }
+        } */
+
         let tokens = lexer::extract_subsections(&file);
         let tree = build_subsection_tree(&file, tokens, &mod_path.path);
-        tree.get_content(mod_path.sub_list(), mod_path.directory()).to_owned()
+
+        if let Some(m) = path.modifier().first(){
+            if m.parse::<usize>().is_ok(){
+                return tree.get_content(mod_path.sub_list(), mod_path.directory(), Some(m.parse::<usize>().unwrap()), get_title).to_owned()
+            }
+        }
+        tree.get_content(mod_path.sub_list(), mod_path.directory(), None, get_title).to_owned()
     }else{
+        if let Some(m) = path.modifier().first(){
+            if m.parse::<usize>().is_ok(){
+                let tokens = lexer::extract_subsections(&file);
+                let tree = build_subsection_tree(&file, tokens, &mod_path.path);
+                return tree.get_content(mod_path.sub_list(), mod_path.directory(), Some(m.parse::<usize>().unwrap()), get_title).to_owned()
+            }
+        }
+        
+        if get_title{
+            return mod_path.file_name().to_owned()
+        }
+
         file
     }
 }
