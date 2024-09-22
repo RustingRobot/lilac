@@ -1,22 +1,54 @@
 start of file 
 new loop 
 D, world destruction
+:1
+test
 Over and overture
+:2
+this
 N, do I need apostrophe
+:3
+thing
 T, need this torture?
+:4
+ok?
 new loop 
 D, world destruction
+:1
+test
 Over and overture
+:2
+this
 N, do I need apostrophe
+:3
+thing
 T, need this torture?
+:4
+ok?
 new loop 
 D, world destruction
+:1
+test
 Over and overture
+:2
+this
 N, do I need apostrophe
+:3
+thing
 T, need this torture?
+:4
+ok?
 new loop 
 D, world destruction
+:1
+test
 Over and overture
+:2
+this
 N, do I need apostrophe
+:3
+thing
 T, need this torture?
+:4
+ok?
 end of file

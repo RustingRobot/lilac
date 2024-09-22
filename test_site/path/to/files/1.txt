@@ -1,1 +1,3 @@
 D, world destruction
+:1
+test
