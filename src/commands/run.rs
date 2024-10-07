@@ -61,7 +61,13 @@ fn handle_connection(mut stream: TcpStream, settings: &Settings) {
     //serve file if it exists. If not send 404
     let contents = match fs::read(format!("_lilac/build{path}")){
         Err(_) => "[404] file does not exist :(".as_bytes().to_vec(),
-        Ok(mut r) => {status_line = "HTTP/1.1 200 OK"; r.append(&mut INJECT.as_bytes().to_owned()); r}
+        Ok(mut r) => {
+            status_line = "HTTP/1.1 200 OK"; 
+            if Path::new(&format!("_lilac/build{path}")).extension().unwrap().to_string_lossy() == "html" {
+                r.append(&mut INJECT.as_bytes().to_owned()); 
+            }
+            r
+        }
     };
 
     let length = contents.len();

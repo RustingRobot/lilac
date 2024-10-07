@@ -157,6 +157,9 @@ fn parse_run(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
         Some("sh") => {
             String::from_utf8_lossy(&Command::new("sh").arg(mod_path.path.clone()).output().err_try("could not launch shell").stdout).trim().to_string()
         },
+        Some("js") => {
+            String::from_utf8_lossy(&Command::new("node").arg(mod_path.path.clone()).output().err_try("could not launch node.js").stdout).trim().to_string()
+        },
         _ => err_exit(&format!("file-extension is not supported as an executable ({})", mod_path.path))
     }
 }
