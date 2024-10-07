@@ -52,6 +52,10 @@ pub fn build(){
             // only create new file if it is going to be processed by lilac
             if lilac_file.is_match(&file_content){
                 process_file(&linked_path, file_content);
+                while lilac_file.is_match(&fs::read_to_string(&linked_path).unwrap()) {
+                    let new_content = fs::read_to_string(&linked_path).unwrap();
+                    process_file(&linked_path, new_content);
+                }
             }else{
                 // else just create a hard link
                 fs::hard_link(original_path, linked_path).unwrap();
