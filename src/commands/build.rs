@@ -51,8 +51,14 @@ pub fn build(){
             };
             // only create new file if it is going to be processed by lilac
             if lilac_file.is_match(&file_content){
+                let mut recursion_depth = 0;
                 process_file(&linked_path, file_content);
                 while lilac_file.is_match(&fs::read_to_string(&linked_path).unwrap()) {
+                    recursion_depth += 1;
+                    if recursion_depth > 100 {
+                        err_exit("recursion depth reached!");
+                    }
+
                     let new_content = fs::read_to_string(&linked_path).unwrap();
                     process_file(&linked_path, new_content);
                 }
