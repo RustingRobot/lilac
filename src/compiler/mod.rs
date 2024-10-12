@@ -161,7 +161,7 @@ mod tests{
             Block(Span { start: 83, end: 98 }), 
             End(Span { start: 98, end: 105 }), 
             Block(Span { start: 105, end: 120 }), 
-            Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into() }), 
+            Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into() }, Vec::new()), 
             Block(Span { start: 153, end: 168 }), 
             Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into() }), 
             Block(Span { start: 203, end: 218 }), 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::{self}, path::Path};
+use std::{collections::HashMap, env, fs::{self}, path::Path};
 
 use std::process::Command;
 
@@ -63,7 +63,7 @@ pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap
             Token::Block(s) => &content[s.start .. s.end],
             Token::Put(_, l) => {temp_str = parse_put(l, &ctx); &temp_str},
             Token::For(_, l, i) => {temp_str = parse_for(l, i.clone(), &node.children, &content, ctx.clone()); &temp_str},
-            Token::Run(_, l) => {temp_str = parse_run(l, &ctx); &temp_str},
+            Token::Run(_, l, a) => {temp_str = parse_run(l, &ctx, a); &temp_str},
             _ => err_exit(&format!("invalid token in parsing stage: {:?}", node)),
         })
     };
@@ -147,19 +147,30 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
     }
 }
 
-fn parse_run(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
+fn parse_run(path: &LilacPath, ctx: &HashMap<String, String>, arguments: &Vec<String>) -> String{
+    println!("arguments: {:?}", arguments);
+
     let mut mod_path = path.clone();
     if mod_path.contains_var(){
         mod_path.resolve_vars(ctx);
     }
 
+    let program;
     match Path::new(&mod_path.path).extension().unwrap().to_str(){
         Some("sh") => {
-            String::from_utf8_lossy(&Command::new("sh").arg(mod_path.path.clone()).output().err_try("could not launch shell").stdout).trim().to_string()
+            program = "sh";
         },
         Some("js") => {
-            String::from_utf8_lossy(&Command::new("node").arg(mod_path.path.clone()).output().err_try("could not launch node.js").stdout).trim().to_string()
+            program = "node";
         },
         _ => err_exit(&format!("file-extension is not supported as an executable ({})", mod_path.path))
     }
+    let mut cmd = Command::new(program);
+    let cmd = cmd.arg(mod_path.path.clone());
+
+    for arg in arguments {
+        cmd.arg(arg);
+    }
+
+    String::from_utf8_lossy(&cmd.output().err_try(&format!("could not launch {}", program)).stdout).trim().to_string()
 }
