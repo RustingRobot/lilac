@@ -16,7 +16,7 @@ pub fn visualize_tokens(tokens: &Vec<Token>, content: &str){
         match token{
             Token::Block(s) => format!("{} {}\n{}", bold("Block:"), bold(&format!("[{} - {}]", s.start, s.end)), &content[s.start .. s.end]),
             Token::Command(s) => format!("{} {}", bold("Command:"), &content[s.start .. s.end]),
-            Token::Put(s, p) => format!("{} {} {} {}", bold("Put Command:"), &content[s.start .. s.end], bold("Path:"), p.path),
+            Token::Put(s, p, a) => format!("{} {} {} {}  {} {:?}", bold("Put Command:"), &content[s.start .. s.end], bold("Path:"), p.path, bold("Parameters:"), a),
             Token::For(s, p, i) => format!("{} {} {} {} {} {}", bold("For Command:"), &content[s.start .. s.end], bold("Path:"), p.path, bold("Iterator:"), i.iterator),
             Token::End(s) => format!("{} {}", bold("End Command:"), &content[s.start .. s.end]),
             Token::Run(s, p, a) => format!("{} {} {} {} {} {:?}", bold("Run Command:"), &content[s.start .. s.end], bold("Path:"), p.path, bold("Arguments:"), a),

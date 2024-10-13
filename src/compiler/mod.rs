@@ -155,7 +155,7 @@ mod tests{
         assert_eq!(tokens, 
         vec![
             Block(Span { start: 0, end: 15 }), 
-            Put(Span { start: 15, end: 39 }, LilacPath { path: "path/to/file.txt".into() }), 
+            Put(Span { start: 15, end: 39 }, LilacPath { path: "path/to/file.txt".into() }, Vec::new()), 
             Block(Span { start: 39, end: 54 }), 
             For(Span { start: 54, end: 83 }, LilacPath { path: "path/to/files".into() }, lexer::Iterator { iterator: "loop".into() }), 
             Block(Span { start: 83, end: 98 }), 
@@ -163,9 +163,9 @@ mod tests{
             Block(Span { start: 105, end: 120 }), 
             Run(Span { start: 120, end: 153 }, LilacPath { path: "scripts/printSomething.sh".into() }, Vec::new()), 
             Block(Span { start: 153, end: 168 }), 
-            Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into() }), 
+            Put(Span { start: 168, end: 203 }, LilacPath { path: "path/to/file.txt:subsection".into() }, Vec::new()), 
             Block(Span { start: 203, end: 218 }), 
-            Put(Span { start: 218, end: 257 }, LilacPath { path: "path/to/file.txt:sub:subsection".into() })]);
+            Put(Span { start: 218, end: 257 }, LilacPath { path: "path/to/file.txt:sub:subsection".into() }, Vec::new())]);
     }
 
     #[test]

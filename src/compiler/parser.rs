@@ -61,7 +61,7 @@ pub fn parse_syntax_tree(nodes: &Vec<TokenNode>, content: &String, ctx: &HashMap
         let temp_str: String;
         file_contents.push_str(match &node.content {
             Token::Block(s) => &content[s.start .. s.end],
-            Token::Put(_, l) => {temp_str = parse_put(l, &ctx); &temp_str},
+            Token::Put(_, l, a) => {temp_str = parse_put(l, &ctx, a); &temp_str},
             Token::For(_, l, i) => {temp_str = parse_for(l, i.clone(), &node.children, &content, ctx.clone()); &temp_str},
             Token::Run(_, l, a) => {temp_str = parse_run(l, &ctx, a); &temp_str},
             _ => err_exit(&format!("invalid token in parsing stage: {:?}", node)),
@@ -103,24 +103,16 @@ fn parse_for(path: &LilacPath, iterator: Iterator, children: &Vec<TokenNode>, co
     build_string.trim_end().to_owned()
 }
 
-fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
+fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>, arguments: &Vec<String>) -> String{
     let mut mod_path = path.clone();
     if mod_path.contains_var(){
         mod_path.resolve_vars(ctx);
     }
 
-    let file = fs::read_to_string(mod_path.directory()).err_try(&format!("could not read file {}", mod_path.path));
+    let mut file = fs::read_to_string(mod_path.directory()).err_try(&format!("could not read file {}", mod_path.path));
     let get_title = path.modifier().contains(&"title");
 
     if mod_path.contains_subsection() {
-        
-/*         if path.modifier().contains(&"title"){
-            return match mod_path.sub_list().last(){
-                Some(s) => s.to_string(),
-                None => err_exit(&format!("oops this should not happen! \n (error in path:{})", mod_path.path))
-            }
-        } */
-
         let tokens = lexer::extract_subsections(&file);
         let tree = build_subsection_tree(&file, tokens, &mod_path.path);
 
@@ -141,6 +133,12 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>) -> String{
         
         if get_title{
             return mod_path.file_name().to_owned()
+        }
+
+        let mut iter = 0;
+        for arg in arguments{
+            file = file.replace(&format!("{{${}}}",iter), arg);
+            iter += 1;
         }
 
         file

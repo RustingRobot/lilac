@@ -121,7 +121,7 @@ pub enum ErrType{
 pub enum Token{
     Block(Span),
     Command(Span),
-    Put(Span, LilacPath),
+    Put(Span, LilacPath, Vec<String>),
     For(Span, LilacPath, Iterator),
     End(Span),
     Run(Span, LilacPath, Vec<String>),
@@ -168,8 +168,9 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
 
                 *t = match cmd_parts[0].to_lowercase().as_str() {
                     "put" => {
-                        if cmd_parts.len() != 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
-                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned()})
+                        if cmd_parts.len() < 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
+                            let arguments: Vec<String> = cmd_parts[2..cmd_parts.len()].iter().map(|&s| s.into()).collect();
+                            Token::Put(*span, LilacPath{ path: cmd_parts[1].to_owned()}, arguments.clone())
                         }
                     }
                     "for" => {
@@ -182,7 +183,7 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
                         for_counter -= 1;
                         Token::End(*span)
                     }
-                    "run" => { if cmd_parts.len() <= 1 { Token::Error(*span, ErrType::WrongArgCount) } else {
+                    "run" => { if cmd_parts.len() < 2 { Token::Error(*span, ErrType::WrongArgCount) } else {
                             let arguments: Vec<String> = cmd_parts[2..cmd_parts.len()].iter().map(|&s| s.into()).collect();
                             Token::Run(*span, LilacPath{ path: cmd_parts[1].to_owned()}, arguments.clone())
                         }
@@ -209,7 +210,7 @@ pub fn extract_commands(content: &str) -> Vec<Token>{
                 errors.push(error_msg);
             }
             //check if path exists
-            Token::Put(_, path) | Token::For(_, path, _) | Token::Run(_, path, _) => {
+            Token::Put(_, path, _) | Token::For(_, path, _) | Token::Run(_, path, _) => {
                 if !path.contains_var(){
                     path.check_path();
                 }
