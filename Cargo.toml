@@ -1,9 +1,13 @@
 [package]
 name = "lilac"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 description = "Static site generator-esque tool for adding include statements to HTML"
 license = "MIT"
+exclude = [
+    "test_cases/*",
+    "test_site/*",
+]
 
 [dependencies]
 serde = {version = "1.0.195", features = ["derive"]}
