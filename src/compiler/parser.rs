@@ -146,7 +146,6 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>, arguments: &Vec<St
 }
 
 fn parse_run(path: &LilacPath, ctx: &HashMap<String, String>, arguments: &Vec<String>) -> String{
-    println!("arguments: {:?}", arguments);
 
     let mut mod_path = path.clone();
     if mod_path.contains_var(){
