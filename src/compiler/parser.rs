@@ -109,8 +109,12 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>, arguments: &Vec<St
         mod_path.resolve_vars(ctx);
     }
 
-    let mut file = fs::read_to_string(mod_path.directory()).err_try(&format!("could not read file {}", mod_path.path));
     let get_title = path.modifier().contains(&"title");
+    if !mod_path.contains_subsection() && get_title{
+        return mod_path.file_name().to_owned()
+    }
+
+    let mut file = fs::read_to_string(mod_path.directory()).err_try(&format!("could not read file {}", mod_path.path));
 
     if mod_path.contains_subsection() {
         let tokens = lexer::extract_subsections(&file);
@@ -129,10 +133,6 @@ fn parse_put(path: &LilacPath, ctx: &HashMap<String, String>, arguments: &Vec<St
                 let tree = build_subsection_tree(&file, tokens, &mod_path.path);
                 return tree.get_content(mod_path.sub_list(), mod_path.directory(), Some(m.parse::<usize>().unwrap()), get_title).to_owned()
             }
-        }
-        
-        if get_title{
-            return mod_path.file_name().to_owned()
         }
 
         let mut iter = 0;

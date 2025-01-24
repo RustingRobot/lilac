@@ -1,6 +1,6 @@
 [package]
 name = "lilac"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "Static site generator-esque tool for adding include statements to HTML"
 license = "MIT"
